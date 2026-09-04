@@ -1,6 +1,7 @@
 <?php
 
-require_once "database/db.php";
+require_once __DIR__ . "/../helpers/helpers.php";
+require_once __DIR__ . "/../models/user_model.php";
 
 
 $userType = "customer";
@@ -24,15 +25,6 @@ $restaurantUsernameErr = "";
 $vehicleTypeErr = "";
 
 $dbErr = "";
-
-
-function cleanInput($data)
-{
-    $data = trim($data);
-    $data = stripslashes($data);
-
-    return $data;
-}
 
 
 if ($_SERVER["REQUEST_METHOD"] == "POST")
@@ -128,31 +120,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST")
         {
             $areaId = (int) $areaId;
 
-            $areaCheck = mysqli_prepare(
-                $conn,
-                "SELECT Area_ID
-                FROM Area
-                WHERE Area_ID = ?"
-            );
-
-            mysqli_stmt_bind_param(
-                $areaCheck,
-                "i",
-                $areaId
-            );
-
-            mysqli_stmt_execute($areaCheck);
-
-            $areaResult = mysqli_stmt_get_result($areaCheck);
-
-
-            if (mysqli_num_rows($areaResult) == 0)
+            if (!areaExists($areaId))
             {
                 $areaErr = "Selected area does not exist.";
             }
-
-
-            mysqli_stmt_close($areaCheck);
         }
     }
 
@@ -235,7 +206,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST")
             if (
                 $vehicleType != "Bicycle" &&
                 $vehicleType != "Motorcycle" &&
-                $vehicleType != "Scooter"
+                $vehicleType != "Car"
             )
             {
                 $vehicleTypeErr = "Invalid vehicle type.";
@@ -256,54 +227,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST")
         empty($vehicleTypeErr)
     )
     {
-        $emailCheck = mysqli_prepare(
-            $conn,
-            "SELECT Email
-            FROM Customer
-            WHERE Email = ?
-
-            UNION ALL
-
-            SELECT Email
-            FROM Restaurant
-            WHERE Email = ?
-
-            UNION ALL
-
-            SELECT Email
-            FROM Deliveryman
-            WHERE Email = ?
-
-            UNION ALL
-
-            SELECT Email
-            FROM Admin
-            WHERE Email = ?
-
-            LIMIT 1"
-        );
-
-        mysqli_stmt_bind_param(
-            $emailCheck,
-            "ssss",
-            $email,
-            $email,
-            $email,
-            $email
-        );
-
-        mysqli_stmt_execute($emailCheck);
-
-        $emailResult = mysqli_stmt_get_result($emailCheck);
-
-
-        if (mysqli_num_rows($emailResult) > 0)
+        if (emailExists($email))
         {
             $emailErr = "An account with this email already exists.";
         }
-
-
-        mysqli_stmt_close($emailCheck);
     }
 
 
@@ -327,28 +254,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST")
 
         if ($userType == "customer")
         {
-            $stmt = mysqli_prepare(
-                $conn,
-                "INSERT INTO Customer
-                (Name, Phone_Number, Email, Password, Area_ID)
-                VALUES (?, ?, ?, ?, ?)"
-            );
-
-            mysqli_stmt_bind_param(
-                $stmt,
-                "ssssi",
-                $name,
-                $phone,
-                $email,
-                $hashedPassword,
-                $areaId
-            );
-
-
-            if (mysqli_stmt_execute($stmt))
+            if (insertCustomer($name, $phone, $email, $hashedPassword, $areaId))
             {
-                mysqli_stmt_close($stmt);
-
                 header("Location: login.php");
                 exit;
             }
@@ -357,66 +264,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST")
             {
                 $dbErr = "Failed to create customer account.";
             }
-
-
-            mysqli_stmt_close($stmt);
         }
 
 
         else if ($userType == "restaurant")
         {
-            $usernameCheck = mysqli_prepare(
-                $conn,
-                "SELECT Restaurant_ID
-                FROM Restaurant
-                WHERE Username = ?"
-            );
-
-            mysqli_stmt_bind_param(
-                $usernameCheck,
-                "s",
-                $restaurantUsername
-            );
-
-            mysqli_stmt_execute($usernameCheck);
-
-            $usernameResult = mysqli_stmt_get_result($usernameCheck);
-
-
-            if (mysqli_num_rows($usernameResult) > 0)
+            if (restaurantUsernameExists($restaurantUsername))
             {
                 $restaurantUsernameErr = "Username already exists.";
             }
 
             else
             {
-                $availabilityStatus = "Available";
-
-                $stmt = mysqli_prepare(
-                    $conn,
-                    "INSERT INTO Restaurant
-                    (Name, Phone_Number, Email, Username, Password, Area_ID, Availability_Status)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)"
-                );
-
-                mysqli_stmt_bind_param(
-                    $stmt,
-                    "sssssis",
-                    $name,
-                    $phone,
-                    $email,
-                    $restaurantUsername,
-                    $hashedPassword,
-                    $areaId,
-                    $availabilityStatus
-                );
-
-
-                if (mysqli_stmt_execute($stmt))
+                if (insertRestaurant($name, $phone, $email, $restaurantUsername, $hashedPassword, $areaId))
                 {
-                    mysqli_stmt_close($stmt);
-                    mysqli_stmt_close($usernameCheck);
-
                     header("Location: login.php");
                     exit;
                 }
@@ -425,46 +286,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST")
                 {
                     $dbErr = "Failed to create restaurant account.";
                 }
-
-
-                mysqli_stmt_close($stmt);
             }
-
-
-            mysqli_stmt_close($usernameCheck);
         }
 
 
         else if ($userType == "deliveryman")
         {
-            $onlineStatus = "Offline";
-            $availabilityStatus = "Available";
-
-            $stmt = mysqli_prepare(
-                $conn,
-                "INSERT INTO Deliveryman
-                (Name, Phone_Number, Email, Password, Vehicle_Type, Area_ID, Online_Status, Availability_Status)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
-            );
-
-            mysqli_stmt_bind_param(
-                $stmt,
-                "sssssiss",
-                $name,
-                $phone,
-                $email,
-                $hashedPassword,
-                $vehicleType,
-                $areaId,
-                $onlineStatus,
-                $availabilityStatus
-            );
-
-
-            if (mysqli_stmt_execute($stmt))
+            if (insertDeliveryman($name, $phone, $email, $hashedPassword, $vehicleType, $areaId))
             {
-                mysqli_stmt_close($stmt);
-
                 header("Location: login.php");
                 exit;
             }
@@ -473,21 +302,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST")
             {
                 $dbErr = "Failed to create deliveryman account.";
             }
-
-
-            mysqli_stmt_close($stmt);
         }
     }
 }
 
 
-$areas = mysqli_query(
-    $conn,
-    "SELECT Area_ID AS area_id,
-    Area_Name AS area_name
-    FROM Area
-    ORDER BY Area_Name ASC"
-);
+$areas = getAreas();
 
 
 if (!$areas)

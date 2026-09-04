@@ -1,221 +1,224 @@
+
+Login · CSS
 * {
     margin: 0px;
     padding: 0px;
     box-sizing: border-box;
 }
-
+ 
 body {
     font-family: Arial, sans-serif;
     background: #F9F9F9;
     color: #333333;
 }
-
+ 
 .login-page {
     min-height: 100vh;
     padding: 20px;
-
+ 
     display: flex;
     align-items: center;
     justify-content: center;
 }
-
+ 
 .card {
     width: 500px;
     max-width: 100%;
-
+ 
     background: #FFFFFF;
-
+ 
     border: 1px solid #EEEEEE;
     border-radius: 20px;
-
+ 
     padding: 36px 40px;
-
+ 
     box-shadow: 0px 12px 40px rgba(0, 0, 0, 0.10);
 }
-
+ 
 .login-card {
     margin: 0px;
 }
-
+ 
 .form-header {
     text-align: center;
     margin-bottom: 32px;
 }
-
+ 
 .form-header a {
     display: inline-block;
 }
-
+ 
 .logo {
     width: 230px;
     max-width: 80%;
-
+ 
     margin-bottom: 22px;
-
+ 
     cursor: pointer;
 }
-
+ 
 .form-header h1 {
     color: #333333;
-
+ 
     font-size: 30px;
-
+ 
     margin-bottom: 8px;
 }
-
+ 
 .form-header p {
     color: #666666;
-
+ 
     font-size: 14px;
     line-height: 1.6;
 }
-
+ 
 .section-title {
     color: #333333;
-
+ 
     font-size: 18px;
-
+ 
     margin-top: 28px;
     margin-bottom: 20px;
-
+ 
     padding-bottom: 10px;
-
+ 
     border-bottom: 1px solid #EEEEEE;
 }
-
+ 
 .section-title::after {
     content: "";
-
+ 
     display: block;
-
+ 
     width: 45px;
     height: 3px;
-
+ 
     background: #FF4D00;
-
+ 
     border-radius: 5px;
-
+ 
     margin-top: 10px;
 }
-
+ 
 .field {
     margin-bottom: 19px;
 }
-
+ 
 .field label {
     display: block;
-
+ 
     color: #333333;
-
+ 
     font-size: 14px;
     font-weight: bold;
-
+ 
     margin-bottom: 8px;
 }
-
+ 
 .field input {
     width: 100%;
-
+ 
     background: #FFFFFF;
     color: #333333;
-
+ 
     padding: 12px 14px;
-
+ 
     border: 1px solid #DADADA;
     border-radius: 8px;
-
+ 
     font-family: inherit;
     font-size: 14px;
-
+ 
     outline: none;
 }
-
+ 
 .field input::placeholder {
     color: #AAAAAA;
 }
-
+ 
 .field input:focus {
     border-color: #FF4D00;
     box-shadow: 0px 0px 0px 3px rgba(255, 77, 0, 0.10);
 }
-
+ 
 .error {
     display: block;
-
+ 
     color: #D93025;
-
+ 
     font-size: 13px;
-
+ 
     margin-top: 6px;
 }
-
+ 
 .buttons {
     width: 100%;
-
+ 
     margin-top: 28px;
 }
-
+ 
 .btn-primary {
     width: 100%;
-
+ 
     background: #FF4D00;
     color: #FFFFFF;
-
+ 
     padding: 14px;
-
+ 
     border: 1px solid #FF4D00;
     border-radius: 8px;
-
+ 
     font-family: inherit;
     font-size: 15px;
     font-weight: bold;
-
+ 
     cursor: pointer;
 }
-
+ 
 .btn-primary:hover {
     background: #E64500;
     border-color: #E64500;
 }
-
+ 
 .login-text {
     color: #666666;
-
+ 
     text-align: center;
-
+ 
     font-size: 14px;
-
+ 
     margin-top: 22px;
 }
-
+ 
 .login-text a {
     color: #FF4D00;
-
+ 
     text-decoration: none;
-
+ 
     font-weight: bold;
 }
-
+ 
 .login-text a:hover {
     text-decoration: underline;
 }
-
+ 
 @media(max-width: 600px) {
-
+ 
     .login-page {
         padding: 20px 15px;
     }
-
+ 
     .card {
         padding: 28px 20px;
     }
-
+ 
     .logo {
         width: 190px;
     }
-
+ 
     .form-header h1 {
         font-size: 26px;
     }
-
+ 
 }
+ 

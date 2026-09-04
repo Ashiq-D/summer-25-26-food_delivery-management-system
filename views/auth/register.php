@@ -1,5 +1,5 @@
 <?php
-require_once "create_acc_process.php";
+require_once __DIR__ . "/../../controllers/auth_controller.php";
 ?>
 
 <!DOCTYPE html>
@@ -9,7 +9,7 @@ require_once "create_acc_process.php";
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Create Account | CraveRush</title>
-  <link rel="stylesheet" href="create_acc.css?v=5">
+  <link rel="stylesheet" href="../../assets/css/register.css?v=5">
 </head>
 
 <body>
@@ -17,7 +17,7 @@ require_once "create_acc_process.php";
   <form class="card" method="post" action="<?= htmlspecialchars($_SERVER["PHP_SELF"]) ?>" novalidate>
 
     <header class="form-header">
-      <a href="home.php"><img src="assets/images/logo.png" alt="CraveRush" class="logo"></a>
+      <a href="../../index.php"><img src="../../assets/images/logo.png" alt="CraveRush" class="logo"></a>
 
       <h1>Create Account</h1>
 
@@ -163,8 +163,8 @@ require_once "create_acc_process.php";
             Motorcycle
           </option>
 
-          <option value="Scooter" <?= ($vehicleType == "Scooter") ? "selected" : "" ?>>
-            Scooter
+          <option value="Car" <?= ($vehicleType == "Car") ? "selected" : "" ?>>
+            Car
           </option>
 
         </select>
@@ -188,12 +188,12 @@ require_once "create_acc_process.php";
 
     <p class="login-text">
       Already have an account?
-      <a href="login.php">Login</a>
+      <a href="../auth/login.php">Login</a>
     </p>
 
   </form>
 
-  <script src="create_acc.js?v=1"></script>
+  <script src="../../assets/js/register.js?v=1"></script>
 
 </body>
 

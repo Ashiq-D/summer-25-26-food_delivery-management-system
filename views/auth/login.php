@@ -1,5 +1,5 @@
 <?php
-require_once "login_process.php";
+require_once __DIR__ . "/../../controllers/login_controller.php";
 ?>
 
 <!DOCTYPE html>
@@ -11,7 +11,7 @@ require_once "login_process.php";
 
   <title>Login | CraveRush</title>
 
-  <link rel="stylesheet" href="login.css?v=10">
+  <link rel="stylesheet" href="../../assets/css/login.css?v=10">
 </head>
 
 <body class="login-page">
@@ -20,8 +20,8 @@ require_once "login_process.php";
 
     <header class="form-header">
 
-      <a href="home.php">
-        <img src="assets/images/logo.png" alt="CraveRush" class="logo">
+      <a href="../../index.php">
+        <img src="../../assets/images/logo.png" alt="CraveRush" class="logo">
       </a>
 
       <h1>Login</h1>
@@ -101,7 +101,7 @@ require_once "login_process.php";
 
       Don't have an account?
 
-      <a href="create_acc.php">
+      <a href="../auth/register.php">
         Create Account
       </a>
 

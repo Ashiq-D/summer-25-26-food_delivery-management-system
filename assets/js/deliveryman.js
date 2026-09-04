@@ -69,7 +69,7 @@ if (onlineToggle && onlineStatusText)
         };
 
 
-        xhttp.open("POST", "delivery_process.php", true);
+        xhttp.open("POST", "../../controllers/ajax_controller.php", true);
 
         xhttp.setRequestHeader(
             "Content-type",
@@ -136,7 +136,7 @@ function updateDeliveryStatus(action)
     };
 
 
-    xhttp.open("POST", "delivery_process.php", true);
+    xhttp.open("POST", "../../controllers/ajax_controller.php", true);
 
     xhttp.setRequestHeader(
         "Content-type",
