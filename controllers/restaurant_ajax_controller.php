@@ -85,7 +85,21 @@ else if ($action == "add_item")
 
     $price = (float) $price;
 
-    if (addMenuItemForRestaurant($restaurantId, $name, $description, $price, $category))
+    $imagePath = null;
+
+    if (isset($_FILES["food_image"]) && $_FILES["food_image"]["error"] !== UPLOAD_ERR_NO_FILE)
+    {
+        $uploadedImagePath = handleProfileImageUpload("food_image", "food", "food_" . $restaurantId);
+
+        if ($uploadedImagePath === false)
+        {
+            sendJson(false, "Item not added: image upload failed. Use a JPG, PNG or WEBP under 2MB.");
+        }
+
+        $imagePath = $uploadedImagePath;
+    }
+
+    if (addMenuItemForRestaurant($restaurantId, $name, $description, $price, $category, $imagePath))
     {
         sendJson(true, "Menu item added successfully.");
     }

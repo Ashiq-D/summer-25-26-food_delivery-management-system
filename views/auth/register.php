@@ -159,8 +159,8 @@ require_once __DIR__ . "/../../controllers/auth_controller.php";
             Bicycle
           </option>
 
-          <option value="Motorcycle" <?= ($vehicleType == "Motorcycle") ? "selected" : "" ?>>
-            Motorcycle
+          <option value="Bike" <?= ($vehicleType == "Bike") ? "selected" : "" ?>>
+            Bike
           </option>
 
           <option value="Car" <?= ($vehicleType == "Car") ? "selected" : "" ?>>

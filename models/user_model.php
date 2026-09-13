@@ -162,7 +162,7 @@ function insertRestaurant($name, $phone, $email, $username, $hashedPassword, $ar
 {
     global $conn;
 
-    $availabilityStatus = "Available";
+    $availabilityStatus = "Open";
 
     $stmt = mysqli_prepare(
         $conn,
@@ -188,6 +188,94 @@ function insertRestaurant($name, $phone, $email, $username, $hashedPassword, $ar
     mysqli_stmt_close($stmt);
 
     return $success;
+}
+
+
+function getCustomerById($customerId)
+{
+    global $conn;
+
+    $stmt = mysqli_prepare(
+        $conn,
+        "SELECT c.Customer_ID AS customer_id,
+        c.Name AS name,
+        c.Phone_Number AS phone_number,
+        c.Email AS email,
+        c.Area_ID AS area_id,
+        c.Profile_Image_Path AS profile_image,
+        a.Area_Name AS area_name
+        FROM Customer c
+        JOIN Area a ON a.Area_ID = c.Area_ID
+        WHERE c.Customer_ID = ?"
+    );
+
+    mysqli_stmt_bind_param($stmt, "i", $customerId);
+    mysqli_stmt_execute($stmt);
+
+    $result = mysqli_stmt_get_result($stmt);
+
+    $customer = mysqli_fetch_assoc($result);
+
+    mysqli_stmt_close($stmt);
+
+    return $customer;
+}
+
+
+function updateCustomerProfile($customerId, $name, $email, $phone, $areaId)
+{
+    global $conn;
+
+    $stmt = mysqli_prepare(
+        $conn,
+        "UPDATE Customer SET Name = ?, Email = ?, Phone_Number = ?, Area_ID = ? WHERE Customer_ID = ?"
+    );
+
+    mysqli_stmt_bind_param($stmt, "sssii", $name, $email, $phone, $areaId, $customerId);
+    $ok = mysqli_stmt_execute($stmt);
+
+    mysqli_stmt_close($stmt);
+
+    return $ok;
+}
+
+
+function updateCustomerProfileImage($customerId, $imagePath)
+{
+    global $conn;
+
+    $stmt = mysqli_prepare(
+        $conn,
+        "UPDATE Customer SET Profile_Image_Path = ? WHERE Customer_ID = ?"
+    );
+
+    mysqli_stmt_bind_param($stmt, "si", $imagePath, $customerId);
+    $ok = mysqli_stmt_execute($stmt);
+
+    mysqli_stmt_close($stmt);
+
+    return $ok;
+}
+
+
+function customerEmailExistsForOther($email, $customerId)
+{
+    global $conn;
+
+    $stmt = mysqli_prepare(
+        $conn,
+        "SELECT Customer_ID FROM Customer WHERE Email = ? AND Customer_ID != ?"
+    );
+
+    mysqli_stmt_bind_param($stmt, "si", $email, $customerId);
+    mysqli_stmt_execute($stmt);
+
+    $result = mysqli_stmt_get_result($stmt);
+    $exists = mysqli_num_rows($result) > 0;
+
+    mysqli_stmt_close($stmt);
+
+    return $exists;
 }
 
 

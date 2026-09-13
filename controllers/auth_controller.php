@@ -205,7 +205,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST")
 
             if (
                 $vehicleType != "Bicycle" &&
-                $vehicleType != "Motorcycle" &&
+                $vehicleType != "Bike" &&
                 $vehicleType != "Car"
             )
             {

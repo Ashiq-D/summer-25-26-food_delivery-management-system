@@ -1556,6 +1556,31 @@ function submitReview() {
 }
 
 /* ============================================================
+   PROFILE DROPDOWN TOGGLE
+   ============================================================ */
+
+(function initProfileDropdown() {
+
+    const profileToggle = document.getElementById("profileToggle");
+    const profileDropdown = document.getElementById("profileDropdown");
+
+    if (profileToggle && profileDropdown) {
+
+        profileToggle.addEventListener("click", function (event) {
+            event.stopPropagation();
+            profileDropdown.classList.toggle("show");
+        });
+
+        document.addEventListener("click", function (event) {
+            if (!profileToggle.contains(event.target)) {
+                profileDropdown.classList.remove("show");
+            }
+        });
+    }
+
+})();
+
+/* ============================================================
    INITIAL PAGE LOAD
    ============================================================ */
 

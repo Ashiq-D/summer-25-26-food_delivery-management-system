@@ -17,6 +17,7 @@ function getDeliverymanById($deliverymanId)
         d.Area_ID AS area_id,
         d.Online_Status AS online_status,
         d.Availability_Status AS availability_status,
+        d.Profile_Image_Path AS profile_image,
         a.Area_Name AS area_name
         FROM Deliveryman d
         JOIN Area a ON d.Area_ID = a.Area_ID
@@ -85,7 +86,7 @@ function getActiveOrderSummary($deliverymanId)
         FROM Delivery d
         JOIN `Order` o ON d.Order_ID = o.Order_ID
         JOIN Restaurant r ON o.Restaurant_ID = r.Restaurant_ID
-        JOIN Customer c ON o.Customer_ID = c.Customer_ID
+        LEFT JOIN Customer c ON o.Customer_ID = c.Customer_ID
         JOIN Area a ON o.Delivery_Area_ID = a.Area_ID
         WHERE d.Deliveryman_ID = ?
         AND o.Order_Status IN ('Ready', 'On The Way')
@@ -132,7 +133,7 @@ function getAssignedOrder($deliverymanId)
         FROM Delivery d
         JOIN `Order` o ON d.Order_ID = o.Order_ID
         JOIN Restaurant r ON o.Restaurant_ID = r.Restaurant_ID
-        JOIN Customer c ON o.Customer_ID = c.Customer_ID
+        LEFT JOIN Customer c ON o.Customer_ID = c.Customer_ID
         JOIN Area a ON o.Delivery_Area_ID = a.Area_ID
         WHERE d.Deliveryman_ID = ?
         AND o.Order_Status IN ('Ready', 'On The Way')
@@ -177,7 +178,7 @@ function getCurrentDelivery($deliverymanId)
         FROM Delivery d
         JOIN `Order` o ON d.Order_ID = o.Order_ID
         JOIN Restaurant r ON o.Restaurant_ID = r.Restaurant_ID
-        JOIN Customer c ON o.Customer_ID = c.Customer_ID
+        LEFT JOIN Customer c ON o.Customer_ID = c.Customer_ID
         JOIN Area a ON o.Delivery_Area_ID = a.Area_ID
         WHERE d.Deliveryman_ID = ?
         AND o.Order_Status IN ('Ready', 'On The Way')
@@ -240,7 +241,7 @@ function getDeliveryHistory($deliverymanId)
         FROM Delivery d
         JOIN `Order` o ON d.Order_ID = o.Order_ID
         JOIN Restaurant r ON o.Restaurant_ID = r.Restaurant_ID
-        JOIN Customer c ON o.Customer_ID = c.Customer_ID
+        LEFT JOIN Customer c ON o.Customer_ID = c.Customer_ID
         JOIN Area a ON o.Delivery_Area_ID = a.Area_ID
         WHERE d.Deliveryman_ID = ?
         AND o.Order_Status = 'Delivered'
@@ -468,6 +469,21 @@ function deliverymanHasActiveOrders($deliverymanId)
 }
 
 
+function deleteDeliverymanAccount($deliverymanId)
+{
+    global $conn;
+
+    $deliverymanId = (int) $deliverymanId;
+
+    $stmt = mysqli_prepare($conn, "DELETE FROM Deliveryman WHERE Deliveryman_ID = ?");
+    mysqli_stmt_bind_param($stmt, "i", $deliverymanId);
+    $ok = mysqli_stmt_execute($stmt);
+    mysqli_stmt_close($stmt);
+
+    return $ok;
+}
+
+
 function updateDeliverymanProfile($deliverymanId, $name, $email, $phone, $vehicleType, $areaId)
 {
     global $conn;
@@ -496,6 +512,24 @@ function updateDeliverymanProfile($deliverymanId, $name, $email, $phone, $vehicl
     mysqli_stmt_close($stmt);
 
     return $updated;
+}
+
+
+function updateDeliverymanProfileImage($deliverymanId, $imagePath)
+{
+    global $conn;
+
+    $stmt = mysqli_prepare(
+        $conn,
+        "UPDATE Deliveryman SET Profile_Image_Path = ? WHERE Deliveryman_ID = ?"
+    );
+
+    mysqli_stmt_bind_param($stmt, "si", $imagePath, $deliverymanId);
+    $ok = mysqli_stmt_execute($stmt);
+
+    mysqli_stmt_close($stmt);
+
+    return $ok;
 }
 
 
@@ -715,97 +749,281 @@ function completeDeliveryTransaction($deliverymanId, $deliveryId, $orderId, $pay
     return false;
 }
 
-function getAvailableOrdersForArea($areaId)
+
+// =========================================================
+// PICKUP / CLAIM FLOW
+//     A Deliveryman browses Prepared orders and claims one
+//     themselves (self-service). Claiming creates the Delivery
+//     record and moves the Order from 'Prepared' to 'Ready'.
+//     From there, the existing "Confirm Pickup & Start Delivery"
+//     flow (startDeliveryTransaction) takes it to 'On The Way'.
+//
+//     Reach is based on Vehicle_Type, matching the rule described
+//     on the admin Areas page:
+//       Bicycle -> own Area only
+//       Bike    -> own Area + directly adjacent Areas
+//       Car     -> own Area + adjacent + two-away Areas
+// =========================================================
+
+function getReachableAreaIds($areaId, $vehicleType)
 {
     global $conn;
 
+    $areaId = (int) $areaId;
+    $areaIds = [$areaId];
+
+    if ($vehicleType == "Bicycle")
+    {
+        return $areaIds;
+    }
+
     $stmt = mysqli_prepare(
         $conn,
-        "SELECT o.Order_ID AS order_id,
-        o.Total_Amount AS total_amount,
-        o.Delivery_Fee AS delivery_fee,
-        o.Payment_Method AS payment_method,
-        r.Name AS restaurant_name,
-        c.Name AS customer_name,
-        a.Area_Name AS area_name,
-        (
-            SELECT COALESCE(SUM(oi.Quantity), 0)
-            FROM Order_Item oi
-            WHERE oi.Order_ID = o.Order_ID
-        ) AS item_count
-        FROM `Order` o
-        JOIN Restaurant r ON o.Restaurant_ID = r.Restaurant_ID
-        JOIN Customer c ON o.Customer_ID = c.Customer_ID
-        JOIN Area a ON o.Delivery_Area_ID = a.Area_ID
-        WHERE o.Delivery_Area_ID = ?
-        AND o.Order_Status = 'Prepared'
-        ORDER BY o.Order_ID ASC"
+        "SELECT Area_ID_2 AS area_id
+        FROM Area_Adjacency
+        WHERE Area_ID_1 = ?"
     );
 
     mysqli_stmt_bind_param($stmt, "i", $areaId);
     mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+
+    $adjacentIds = [];
+
+    while ($row = mysqli_fetch_assoc($result))
+    {
+        $adjacentIds[] = (int) $row["area_id"];
+    }
+
+    mysqli_stmt_close($stmt);
+
+    $areaIds = array_merge($areaIds, $adjacentIds);
+
+    if ($vehicleType == "Bike")
+    {
+        return array_values(array_unique($areaIds));
+    }
+
+    // Car: also include areas adjacent to the adjacent areas ("two-away")
+    $twoAwayIds = [];
+
+    foreach ($adjacentIds as $adjId)
+    {
+        $stmt = mysqli_prepare(
+            $conn,
+            "SELECT Area_ID_2 AS area_id
+            FROM Area_Adjacency
+            WHERE Area_ID_1 = ?"
+        );
+
+        mysqli_stmt_bind_param($stmt, "i", $adjId);
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
+
+        while ($row = mysqli_fetch_assoc($result))
+        {
+            $twoAwayIds[] = (int) $row["area_id"];
+        }
+
+        mysqli_stmt_close($stmt);
+    }
+
+    $areaIds = array_merge($areaIds, $twoAwayIds);
+
+    return array_values(array_unique($areaIds));
+}
+
+
+function getAvailableOrdersForDeliveryman($deliverymanId)
+{
+    global $conn;
+
+    $deliverymanId = (int) $deliverymanId;
+
+    $deliveryman = getDeliverymanById($deliverymanId);
+
+    if (!$deliveryman)
+    {
+        return [];
+    }
+
+    $areaIds = getReachableAreaIds($deliveryman["area_id"], $deliveryman["vehicle_type"]);
+
+    if (empty($areaIds))
+    {
+        return [];
+    }
+
+    $placeholders = implode(",", array_fill(0, count($areaIds), "?"));
+    $types = str_repeat("i", count($areaIds));
+
+    $sql = "SELECT o.Order_ID AS order_id,
+            o.Total_Amount AS total_amount,
+            o.Delivery_Fee AS delivery_fee,
+            o.Payment_Method AS payment_method,
+            r.Name AS restaurant_name,
+            a.Area_Name AS area_name,
+            (
+                SELECT COALESCE(SUM(oi.Quantity), 0)
+                FROM Order_Item oi
+                WHERE oi.Order_ID = o.Order_ID
+            ) AS item_count
+            FROM `Order` o
+            JOIN Restaurant r ON o.Restaurant_ID = r.Restaurant_ID
+            JOIN Area a ON o.Delivery_Area_ID = a.Area_ID
+            LEFT JOIN Delivery d ON d.Order_ID = o.Order_ID
+            WHERE o.Order_Status = 'Prepared'
+            AND d.Delivery_ID IS NULL
+            AND o.Delivery_Area_ID IN ($placeholders)
+            ORDER BY o.Order_Date ASC";
+
+    $stmt = mysqli_prepare($conn, $sql);
+
+    if (!$stmt)
+    {
+        return [];
+    }
+
+    mysqli_stmt_bind_param($stmt, $types, ...$areaIds);
+    mysqli_stmt_execute($stmt);
 
     $result = mysqli_stmt_get_result($stmt);
     $orders = [];
-    while ($row = mysqli_fetch_assoc($result)) {
+
+    while ($row = mysqli_fetch_assoc($result))
+    {
         $orders[] = $row;
     }
+
     mysqli_stmt_close($stmt);
 
     return $orders;
 }
 
-function acceptOrder($deliverymanId, $orderId, $areaId)
+
+function claimOrderForDeliveryman($deliverymanId, $orderId)
 {
     global $conn;
 
+    $deliverymanId = (int) $deliverymanId;
+    $orderId       = (int) $orderId;
+
+    if ($deliverymanId <= 0 || $orderId <= 0)
+    {
+        return false;
+    }
+
+    if (deliverymanHasActiveOrders($deliverymanId))
+    {
+        // Already has an order in progress - can't claim a second one.
+        return false;
+    }
+
+    $deliveryman = getDeliverymanById($deliverymanId);
+
+    if (!$deliveryman || $deliveryman["availability_status"] != "Available")
+    {
+        return false;
+    }
+
+    $areaIds = getReachableAreaIds($deliveryman["area_id"], $deliveryman["vehicle_type"]);
+
     mysqli_begin_transaction($conn);
 
+    // Lock and re-check the order is still Prepared, unclaimed, and reachable.
     $stmt = mysqli_prepare(
         $conn,
-        "SELECT Order_ID FROM `Order` 
-        WHERE Order_ID = ? 
-        AND Delivery_Area_ID = ? 
-        AND Order_Status = 'Prepared'
+        "SELECT o.Order_ID
+        FROM `Order` o
+        LEFT JOIN Delivery d ON d.Order_ID = o.Order_ID
+        WHERE o.Order_ID = ?
+        AND o.Order_Status = 'Prepared'
+        AND d.Delivery_ID IS NULL
         FOR UPDATE"
     );
-    mysqli_stmt_bind_param($stmt, "ii", $orderId, $areaId);
+
+    mysqli_stmt_bind_param($stmt, "i", $orderId);
     mysqli_stmt_execute($stmt);
     $result = mysqli_stmt_get_result($stmt);
-    $order = mysqli_fetch_assoc($result);
+    $order  = mysqli_fetch_assoc($result);
     mysqli_stmt_close($stmt);
 
-    if (!$order) {
+    if (!$order)
+    {
         mysqli_rollback($conn);
+
+        return false;
+    }
+
+    // Re-fetch the order's Area to confirm it's within this deliveryman's reach.
+    $areaStmt = mysqli_prepare(
+        $conn,
+        "SELECT Delivery_Area_ID FROM `Order` WHERE Order_ID = ?"
+    );
+
+    mysqli_stmt_bind_param($areaStmt, "i", $orderId);
+    mysqli_stmt_execute($areaStmt);
+    $areaResult = mysqli_stmt_get_result($areaStmt);
+    $areaRow    = mysqli_fetch_assoc($areaResult);
+    mysqli_stmt_close($areaStmt);
+
+    if (!$areaRow || !in_array((int) $areaRow["Delivery_Area_ID"], $areaIds, true))
+    {
+        mysqli_rollback($conn);
+
         return false;
     }
 
     $insertStmt = mysqli_prepare(
         $conn,
-        "INSERT INTO Delivery (Order_ID, Deliveryman_ID, Delivery_Status) VALUES (?, ?, 'Assigned')"
+        "INSERT INTO Delivery (Order_ID, Deliveryman_ID, Delivery_Status)
+        VALUES (?, ?, 'Preparing')"
     );
+
     mysqli_stmt_bind_param($insertStmt, "ii", $orderId, $deliverymanId);
     $inserted = mysqli_stmt_execute($insertStmt);
     mysqli_stmt_close($insertStmt);
 
-    if (!$inserted) {
+    if (!$inserted)
+    {
         mysqli_rollback($conn);
+
         return false;
     }
 
-    $updateStmt = mysqli_prepare(
+    $updateOrderStmt = mysqli_prepare(
         $conn,
-        "UPDATE `Order` SET Order_Status = 'Ready' WHERE Order_ID = ?"
+        "UPDATE `Order` SET Order_Status = 'Ready' WHERE Order_ID = ? AND Order_Status = 'Prepared'"
     );
-    mysqli_stmt_bind_param($updateStmt, "i", $orderId);
-    $updated = mysqli_stmt_execute($updateStmt);
-    mysqli_stmt_close($updateStmt);
 
-    if (!$updated) {
+    mysqli_stmt_bind_param($updateOrderStmt, "i", $orderId);
+    $orderUpdated = mysqli_stmt_execute($updateOrderStmt);
+    mysqli_stmt_close($updateOrderStmt);
+
+    if (!$orderUpdated)
+    {
         mysqli_rollback($conn);
+
+        return false;
+    }
+
+    $updateDeliverymanStmt = mysqli_prepare(
+        $conn,
+        "UPDATE Deliveryman SET Availability_Status = 'Busy' WHERE Deliveryman_ID = ?"
+    );
+
+    mysqli_stmt_bind_param($updateDeliverymanStmt, "i", $deliverymanId);
+    $deliverymanUpdated = mysqli_stmt_execute($updateDeliverymanStmt);
+    mysqli_stmt_close($updateDeliverymanStmt);
+
+    if (!$deliverymanUpdated)
+    {
+        mysqli_rollback($conn);
+
         return false;
     }
 
     mysqli_commit($conn);
+
     return true;
 }

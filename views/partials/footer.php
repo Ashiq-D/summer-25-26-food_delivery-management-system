@@ -2,7 +2,7 @@
 
         <div class="footer-container">
 
-            <img src="assets/images/logo.png" alt="CraveRush">
+            <img src="<?= $footerAssetPath ?? "" ?>assets/images/logo.png" alt="CraveRush">
 
             <p>
                 © 2026 CraveRush. All rights reserved.

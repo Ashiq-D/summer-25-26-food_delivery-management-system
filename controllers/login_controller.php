@@ -99,13 +99,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST")
 
         if (
             $user &&
-            password_verify($password, $user["password"])
+            $password === $user["password"]
         )
         {
             $_SESSION["user_role"] = "admin";
             $_SESSION["admin_id"] = $user["admin_id"];
 
-            header("Location: ../../admin/admin_dashboard.php");
+            header("Location: ../admin/dashboard.php");
             exit;
         }
 

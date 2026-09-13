@@ -12,16 +12,16 @@ class Review
     /**
      * Add a review for a restaurant.
      *
-     * Uses the actual Review table and its column names.
-     * Validates that:
-     *  - the restaurant exists
-     *  - the customer has a delivered order from that restaurant
-     *    (order must be delivered before a review is accepted)
-     *  - the customer has not already reviewed this restaurant
+     * Uses the Restaurant_Review table (Order_ID based - matches the
+     * CRAVERUSH schema, where at most one review exists per Order).
      *
-     * @param int    $userId       Customer User_ID
+     * Validates that:
+     *  - the customer has a Delivered order from that restaurant
+     *  - that order does not already have a review
+     *
+     * @param int    $userId       Customer_ID
      * @param int    $restaurantId Restaurant_ID
-     * @param int    $rating       1–5
+     * @param int    $rating       1-5
      * @param string $comment      Review text
      *
      * @return bool
@@ -48,16 +48,20 @@ class Review
         }
 
         /*
-         * Verify that the customer has a Delivered order from this restaurant.
-         * Business rule: only customers with a delivered order may review.
+         * Find the most recent Delivered order from this customer at this
+         * restaurant that does NOT already have a Restaurant_Review.
+         * (Restaurant_Review.Order_ID is UNIQUE - one review per order.)
          */
         $orderCheck = mysqli_prepare(
             $this->conn,
-            "SELECT Order_ID
-             FROM `Order`
-             WHERE Customer_ID = ?
-               AND Restaurant_ID = ?
-               AND Order_Status = 'Delivered'
+            "SELECT o.Order_ID
+             FROM `Order` o
+             LEFT JOIN Restaurant_Review rr ON rr.Order_ID = o.Order_ID
+             WHERE o.Customer_ID = ?
+               AND o.Restaurant_ID = ?
+               AND o.Order_Status = 'Delivered'
+               AND rr.Restaurant_Review_ID IS NULL
+             ORDER BY o.Order_ID DESC
              LIMIT 1"
         );
 
@@ -68,45 +72,22 @@ class Review
         mysqli_stmt_bind_param($orderCheck, "ii", $userId, $restaurantId);
         mysqli_stmt_execute($orderCheck);
         $orderResult = mysqli_stmt_get_result($orderCheck);
-        $hasOrder    = mysqli_fetch_assoc($orderResult);
+        $order       = mysqli_fetch_assoc($orderResult);
         mysqli_stmt_close($orderCheck);
 
-        if (!$hasOrder) {
+        if (!$order) {
+            /* No eligible (delivered, unreviewed) order for this restaurant */
             return false;
         }
 
-        /*
-         * Prevent duplicate reviews: one customer, one restaurant.
-         */
-        $dupCheck = mysqli_prepare(
-            $this->conn,
-            "SELECT Review_ID
-             FROM Review
-             WHERE Customer_ID = ?
-               AND Restaurant_ID = ?
-             LIMIT 1"
-        );
-
-        if (!$dupCheck) {
-            return false;
-        }
-
-        mysqli_stmt_bind_param($dupCheck, "ii", $userId, $restaurantId);
-        mysqli_stmt_execute($dupCheck);
-        $dupResult = mysqli_stmt_get_result($dupCheck);
-        $existing  = mysqli_fetch_assoc($dupResult);
-        mysqli_stmt_close($dupCheck);
-
-        if ($existing) {
-            return false;
-        }
+        $orderId = (int)$order["Order_ID"];
 
         /* Insert the review */
         $stmt = mysqli_prepare(
             $this->conn,
-            "INSERT INTO Review
-            (Customer_ID, Restaurant_ID, Rating, Comment, Review_Date)
-            VALUES (?, ?, ?, ?, NOW())"
+            "INSERT INTO Restaurant_Review
+            (Order_ID, Customer_ID, Restaurant_ID, Rating, Comment, Review_Date)
+            VALUES (?, ?, ?, ?, ?, CURDATE())"
         );
 
         if (!$stmt) {
@@ -115,7 +96,8 @@ class Review
 
         mysqli_stmt_bind_param(
             $stmt,
-            "iiis",
+            "iiiis",
+            $orderId,
             $userId,
             $restaurantId,
             $rating,

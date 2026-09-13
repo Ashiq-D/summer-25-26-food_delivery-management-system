@@ -9,74 +9,25 @@ require_once __DIR__ . "/../../controllers/deliveryman_controller.php";
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Current Delivery | CraveRush</title>
-  <link rel="stylesheet" href="../../assets/css/deliveryman.css?v=1">
+  <link rel="stylesheet" href="../../assets/css/deliveryman.css?v=6">
 </head>
 
 <body>
 
-  <aside class="sidebar" id="sidebar">
-    <div class="sidebar-logo">
-      <img src="../../assets/images/logo.png" alt="CraveRush">
-    </div>
-
-    <nav class="sidebar-menu">
-      <a href="dashboard.php" class="menu-item">
-        <img src="../../assets/images/home.png" alt="Dashboard" class="menu-icon">
-        Dashboard
-      </a>
-
-      <a href="orders.php" class="menu-item">
-        <img src="../../assets/images/assigned.png" alt="Assigned Deliveries" class="menu-icon">
-        Assigned Deliveries
-      </a>
-
-      <a href="current.php" class="menu-item active">
-        <img src="../../assets/images/currentDelivery.png" alt="Current Delivery" class="menu-icon">
-        Current Delivery
-      </a>
-
-      <a href="history.php" class="menu-item">
-        <img src="../../assets/images/history.png" alt="Delivery History" class="menu-icon">
-        Delivery History
-      </a>
-
-      <a href="earnings.php" class="menu-item">
-        <img src="../../assets/images/earnings.png" alt="Earnings" class="menu-icon">
-        Earnings
-      </a>
-
-      <a href="profile.php" class="menu-item">
-        <img src="../../assets/images/profile.png" alt="Profile" class="menu-icon">
-        Profile
-      </a>
-    </nav>
-
-    <div class="sidebar-bottom">
-      <a href="../../controllers/deliveryman_controller.php?action=logout" class="logout-btn">Logout</a>
-    </div>
-  </aside>
+  <?php require __DIR__ . "/partials/sidebar.php"; ?>
 
   <main class="main-content">
 
-    <header class="topbar">
-      <button type="button" class="menu-toggle" id="menuToggle">☰</button>
-
-      <div>
-        <h1>Current Delivery</h1>
-
-        <?php if ($currentDelivery): ?>
-          <p>Order #CR-<?= (int) $currentDelivery["order_id"] ?></p>
-        <?php else: ?>
-          <p>No Active Order</p>
-        <?php endif; ?>
-      </div>
-
-      <?php if ($currentDelivery): ?>
-        <span class="status-badge orange" id="currentStatus">
-          <?= htmlspecialchars($currentDelivery["order_status"]) ?>
-        </span>
-      <?php endif; ?>
-    </header>
+    <?php
+      $pageTitle = "Current Delivery";
+      $pageSubtitle = $currentDelivery
+        ? "Order #CR-" . (int) $currentDelivery["order_id"]
+        : "No Active Order";
+      $headerExtra = $currentDelivery
+        ? '<span class="status-badge orange" id="currentStatus">' . htmlspecialchars($currentDelivery["order_status"]) . '</span>'
+        : "";
+      require __DIR__ . "/partials/header.php";
+    ?>
 
     <?php if ($currentDelivery): ?>
 
@@ -304,7 +255,9 @@ require_once __DIR__ . "/../../controllers/deliveryman_controller.php";
 
   </main>
 
-  <script src="../../assets/js/deliveryman.js?v=1"></script>
+  <?php $footerAssetPath = "../../"; require_once __DIR__ . "/../partials/footer.php"; ?>
+
+  <script src="../../assets/js/deliveryman.js?v=3"></script>
 </body>
 
 </html>

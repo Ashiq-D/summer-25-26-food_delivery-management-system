@@ -15,10 +15,13 @@
  * Integrates with the existing CraveRush session (user_id).
  */
 
+require_once __DIR__ . "/../../controllers/customer_profile_controller.php";
 include_once __DIR__ . "/../../controllers/customer_controller.php";
 
 $controller  = new CustomerController();
 $restaurants = $controller->getRestaurants();
+
+$onHomePage = true;
 
 ?>
 <!DOCTYPE html>
@@ -41,34 +44,7 @@ $restaurants = $controller->getRestaurants();
          HEADER
          ======================================================== -->
 
-    <header>
-
-        <div class="logo" onclick="goHome()">
-            <img src="../../assets/images/logo.png" alt="CraveRush Logo">
-        </div>
-
-        <nav>
-
-            <a href="#" onclick="goHome()">Home</a>
-
-            <a href="#restaurants" onclick="showRestaurants()">Restaurants</a>
-
-            <a href="#" onclick="showTracking()">Track Order</a>
-
-            <a href="#" onclick="openCart()">Cart</a>
-
-            <a href="#" onclick="showReview()">Rating</a>
-
-            <a href="../logout.php">Logout</a>
-
-            <div class="cart-icon" onclick="openCart()">
-                🛒
-                <span class="cart-count" id="cartCount">0</span>
-            </div>
-
-        </nav>
-
-    </header>
+    <?php require __DIR__ . "/partials/header.php"; ?>
 
     <!-- ========================================================
          HERO / SEARCH

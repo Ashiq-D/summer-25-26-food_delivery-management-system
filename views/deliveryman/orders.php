@@ -9,67 +9,37 @@ require_once __DIR__ . "/../../controllers/deliveryman_controller.php";
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Assigned Deliveries | CraveRush</title>
-  <link rel="stylesheet" href="../../assets/css/deliveryman.css?v=1">
+  <link rel="stylesheet" href="../../assets/css/deliveryman.css?v=6">
 </head>
 
 <body>
 
-  <aside class="sidebar" id="sidebar">
-    <div class="sidebar-logo">
-      <img src="../../assets/images/logo.png" alt="CraveRush">
-    </div>
-
-    <nav class="sidebar-menu">
-      <a href="dashboard.php" class="menu-item">
-        <img src="../../assets/images/home.png" alt="Dashboard" class="menu-icon">
-        Dashboard
-      </a>
-
-      <a href="orders.php" class="menu-item active">
-        <img src="../../assets/images/assigned.png" alt="Assigned Deliveries" class="menu-icon">
-        Assigned Deliveries
-      </a>
-
-      <a href="current.php" class="menu-item">
-        <img src="../../assets/images/currentDelivery.png" alt="Current Delivery" class="menu-icon">
-        Current Delivery
-      </a>
-
-      <a href="history.php" class="menu-item">
-        <img src="../../assets/images/history.png" alt="Delivery History" class="menu-icon">
-        Delivery History
-      </a>
-
-      <a href="earnings.php" class="menu-item">
-        <img src="../../assets/images/earnings.png" alt="Earnings" class="menu-icon">
-        Earnings
-      </a>
-
-      <a href="profile.php" class="menu-item">
-        <img src="../../assets/images/profile.png" alt="Profile" class="menu-icon">
-        Profile
-      </a>
-    </nav>
-
-    <div class="sidebar-bottom">
-      <a href="../../controllers/deliveryman_controller.php?action=logout" class="logout-btn">Logout</a>
-    </div>
-  </aside>
+  <?php require __DIR__ . "/partials/sidebar.php"; ?>
 
   <main class="main-content">
 
-    <header class="topbar">
-      <button type="button" class="menu-toggle" id="menuToggle">☰</button>
+    <?php
+      $pageTitle = "Assigned Deliveries";
+      $pageSubtitle = "View the order currently assigned to you.";
+      $headerExtra = '<span class="count-badge">' . ($assignedOrder ? "1 Active Order" : "0 Active Orders") . '</span>';
+      require __DIR__ . "/partials/header.php";
+    ?>
 
-      <div>
-        <h1>Assigned Deliveries</h1>
-        <p>View the order currently assigned to you.</p>
-      </div>
+    <?php if (!empty($successMessage)): ?>
 
-      <span class="count-badge">
-        <?= $assignedOrder ? "1 Active Order" : "0 Active Orders" ?>
-      </span>
-    </header>
+    <div class="success-message">
+      <?= htmlspecialchars($successMessage) ?>
+    </div>
+
+    <?php endif; ?>
+
+    <?php if (!empty($errorMessage)): ?>
+
+    <div class="error-message">
+      <?= htmlspecialchars($errorMessage) ?>
+    </div>
+
+    <?php endif; ?>
 
     <?php if ($assignedOrder): ?>
 
@@ -152,17 +122,65 @@ require_once __DIR__ . "/../../controllers/deliveryman_controller.php";
     <section class="content-card">
       <div class="card-heading">
         <div>
-          <h2>No Assigned Delivery</h2>
-          <p>You currently have no order assigned to you.</p>
+          <h2>Available Orders Near You</h2>
+          <p>Pick up an order that's ready for delivery in your area.</p>
         </div>
       </div>
+
+      <?php if (empty($availableOrders)): ?>
+
+      <p>No orders are ready for pickup in your area right now. Check back soon.</p>
+
+      <?php else: ?>
+
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Order</th>
+              <th>Restaurant</th>
+              <th>Area</th>
+              <th>Items</th>
+              <th>Payment</th>
+              <th>Total</th>
+              <th></th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <?php foreach ($availableOrders as $available): ?>
+
+            <tr>
+              <td>#CR-<?= (int) $available["order_id"] ?></td>
+              <td><?= htmlspecialchars($available["restaurant_name"]) ?></td>
+              <td><?= htmlspecialchars($available["area_name"]) ?></td>
+              <td><?= (int) $available["item_count"] ?></td>
+              <td><?= htmlspecialchars($available["payment_method"]) ?></td>
+              <td>৳<?= number_format($available["total_amount"], 0) ?></td>
+              <td>
+                <form method="POST" action="orders.php">
+                  <input type="hidden" name="action" value="claim_order">
+                  <input type="hidden" name="order_id" value="<?= (int) $available["order_id"] ?>">
+                  <button type="submit" class="btn-primary">Pick Up</button>
+                </form>
+              </td>
+            </tr>
+
+            <?php endforeach; ?>
+          </tbody>
+        </table>
+      </div>
+
+      <?php endif; ?>
     </section>
 
     <?php endif; ?>
 
   </main>
 
-  <script src="../../assets/js/deliveryman.js?v=1"></script>
+  <?php $footerAssetPath = "../../"; require_once __DIR__ . "/../partials/footer.php"; ?>
+
+  <script src="../../assets/js/deliveryman.js?v=3"></script>
 </body>
 
 </html>

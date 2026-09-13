@@ -9,72 +9,33 @@ require_once __DIR__ . "/../../controllers/deliveryman_controller.php";
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Delivery Profile | CraveRush</title>
-  <link rel="stylesheet" href="../../assets/css/deliveryman.css?v=1">
+  <link rel="stylesheet" href="../../assets/css/deliveryman.css?v=6">
 </head>
 
 <body>
 
-  <aside class="sidebar" id="sidebar">
-    <div class="sidebar-logo">
-      <img src="../../assets/images/logo.png" alt="CraveRush">
-    </div>
-
-    <nav class="sidebar-menu">
-      <a href="dashboard.php" class="menu-item">
-        <img src="../../assets/images/home.png" alt="Dashboard" class="menu-icon">
-        Dashboard
-      </a>
-
-      <a href="orders.php" class="menu-item">
-        <img src="../../assets/images/assigned.png" alt="Assigned Deliveries" class="menu-icon">
-        Assigned Deliveries
-      </a>
-
-      <a href="current.php" class="menu-item">
-        <img src="../../assets/images/currentDelivery.png" alt="Current Delivery" class="menu-icon">
-        Current Delivery
-      </a>
-
-      <a href="history.php" class="menu-item">
-        <img src="../../assets/images/history.png" alt="Delivery History" class="menu-icon">
-        Delivery History
-      </a>
-
-      <a href="earnings.php" class="menu-item">
-        <img src="../../assets/images/earnings.png" alt="Earnings" class="menu-icon">
-        Earnings
-      </a>
-
-      <a href="profile.php" class="menu-item active">
-        <img src="../../assets/images/profile.png" alt="Profile" class="menu-icon">
-        Profile
-      </a>
-    </nav>
-
-    <div class="sidebar-bottom">
-      <a href="../../controllers/deliveryman_controller.php?action=logout" class="logout-btn">Logout</a>
-    </div>
-  </aside>
+  <?php require __DIR__ . "/partials/sidebar.php"; ?>
 
   <main class="main-content">
 
-    <header class="topbar">
-      <button type="button" class="menu-toggle" id="menuToggle">☰</button>
-
-      <div>
-        <h1>My Profile</h1>
-        <p>Manage your personal and vehicle information.</p>
-      </div>
-
-      <span class="status-badge <?= ($deliveryman["availability_status"] == "Available") ? "green" : "orange" ?>">
-        <?= htmlspecialchars($deliveryman["availability_status"]) ?>
-      </span>
-    </header>
+    <?php
+      $pageTitle = "My Profile";
+      $pageSubtitle = "Manage your personal and vehicle information.";
+      $badgeClass = ($deliveryman["availability_status"] == "Available") ? "green" : "orange";
+      $headerExtra = '<span class="status-badge ' . $badgeClass . '">' . htmlspecialchars($deliveryman["availability_status"]) . '</span>';
+      require __DIR__ . "/partials/header.php";
+    ?>
 
     <section class="profile-header-card">
-      <div class="profile-avatar">
-        <?= htmlspecialchars(strtoupper(substr($deliveryman["name"], 0, 1))) ?>
-      </div>
+      <?php if (!empty($deliveryman["profile_image"])) : ?>
+        <div class="profile-avatar">
+          <img src="../../<?= htmlspecialchars($deliveryman["profile_image"]) ?>" alt="<?= htmlspecialchars($deliveryman["name"]) ?>">
+        </div>
+      <?php else : ?>
+        <div class="profile-avatar">
+          <?= htmlspecialchars(strtoupper(substr($deliveryman["name"], 0, 1))) ?>
+        </div>
+      <?php endif; ?>
 
       <div>
         <h2><?= htmlspecialchars($deliveryman["name"]) ?></h2>
@@ -99,7 +60,7 @@ require_once __DIR__ . "/../../controllers/deliveryman_controller.php";
 
     <?php endif; ?>
 
-    <form class="profile-form" id="profileForm" method="post" action="<?= htmlspecialchars($_SERVER["PHP_SELF"]) ?>">
+    <form class="profile-form" id="profileForm" method="post" action="<?= htmlspecialchars($_SERVER["PHP_SELF"]) ?>" enctype="multipart/form-data">
 
       <input type="hidden" name="action" value="update_profile">
 
@@ -111,6 +72,12 @@ require_once __DIR__ . "/../../controllers/deliveryman_controller.php";
           </div>
 
           <button type="button" class="small-btn" id="editProfileBtn">Edit</button>
+        </div>
+
+        <div class="field profile-avatar-upload" style="margin-bottom: 18px;">
+          <label for="profilePicture">Change Photo</label>
+          <input type="file" id="profilePicture" name="profile_picture" accept="image/jpeg,image/png,image/webp">
+          <span class="file-chosen">JPG, PNG or WEBP, up to 2MB</span>
         </div>
 
         <div class="form-grid">
@@ -155,22 +122,18 @@ require_once __DIR__ . "/../../controllers/deliveryman_controller.php";
             <label for="vehicleType">Vehicle Type</label>
 
             <select id="vehicleType" name="vehicle_type" disabled>
-
-              <option value="Bicycle" <?= ($deliveryman["vehicle_type"] == "Bicycle") ? "selected" : "" ?>>
+                <option value="Bicycle" <?= ($deliveryman["vehicle_type"] == "Bicycle") ? "selected" : "" ?>>
                 Bicycle
-              </option>
-
-              <option value="Motorcycle" <?= ($deliveryman["vehicle_type"] == "Motorcycle") ? "selected" : "" ?>>
-                Motorcycle
-              </option>
-
-              <option value="Car" <?= ($deliveryman["vehicle_type"] == "Car") ? "selected" : "" ?>>
+                </option>
+                <option value="Bike" <?= ($deliveryman["vehicle_type"] == "Bike") ? "selected" : "" ?>>
+                Bike
+                </option>
+                <option value="Car" <?= ($deliveryman["vehicle_type"] == "Car") ? "selected" : "" ?>>
                 Car
-              </option>
-
+                </option>
             </select>
             <span class="error" id="vehicleError"></span>
-          </div>
+           </div>
 
           <div class="field">
             <label for="deliveryArea">Area</label>
@@ -222,9 +185,25 @@ require_once __DIR__ . "/../../controllers/deliveryman_controller.php";
 
     </form>
 
+    <section class="content-card">
+      <div class="card-heading">
+        <div>
+          <h2>Delete My Account</h2>
+          <p>Permanently delete your Deliveryman account. All associated data will also be deleted. This action cannot be undone. This is not possible while you have an active delivery.</p>
+        </div>
+      </div>
+
+      <form method="post" action="<?= htmlspecialchars($_SERVER["PHP_SELF"]) ?>" onsubmit="return confirm('Are you sure you want to permanently delete your account? This action cannot be undone.');">
+        <input type="hidden" name="action" value="delete_account">
+        <button type="submit" class="btn-danger">Delete My Account</button>
+      </form>
+    </section>
+
   </main>
 
-  <script src="../../assets/js/deliveryman.js?v=2"></script>
+  <?php $footerAssetPath = "../../"; require_once __DIR__ . "/../partials/footer.php"; ?>
+
+  <script src="../../assets/js/deliveryman.js?v=3"></script>
 </body>
 
 </html>

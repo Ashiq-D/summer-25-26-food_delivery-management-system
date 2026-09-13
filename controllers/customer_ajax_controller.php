@@ -8,7 +8,8 @@
 
 session_start();
 
-include_once __DIR__ . "/../config/database.php";
+include_once __DIR__ . "/../config/config.php";
+include_once __DIR__ . "/../helpers/helpers.php";
 include_once __DIR__ . "/../models/restaurant_model.php";
 include_once __DIR__ . "/../models/order_model.php";
 include_once __DIR__ . "/../models/review_model.php";
@@ -80,10 +81,14 @@ function handleGetRestaurants($conn) {
             if ($m['availability_status'] !== 'Available') {
                 continue;
             }
+            $imageUrl = resolveImagePath(
+                $m['image_path'] ?? null,
+                '../../assets/images/food' . (($m['food_id'] - 1) % 14 + 1) . '.jpg'
+            );
             $formattedMenus[] = [
                 'id' => (int)$m['food_id'],
                 'name' => $m['name'],
-                'image' => '../../assets/images/food' . (($m['food_id'] - 1) % 14 + 1) . '.jpg',
+                'image' => $imageUrl,
                 'description' => $m['description'],
                 'price' => (float)$m['price']
             ];
@@ -149,10 +154,14 @@ function handleSearch($conn) {
             if ($m['availability_status'] !== 'Available') {
                 continue;
             }
+            $imageUrl = resolveImagePath(
+                $m['image_path'] ?? null,
+                '../../assets/images/food' . (($m['food_id'] - 1) % 14 + 1) . '.jpg'
+            );
             $formattedMenus[] = [
                 'id' => (int)$m['food_id'],
                 'name' => $m['name'],
-                'image' => '../../assets/images/food' . (($m['food_id'] - 1) % 14 + 1) . '.jpg',
+                'image' => $imageUrl,
                 'description' => $m['description'],
                 'price' => (float)$m['price']
             ];

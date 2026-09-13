@@ -9,84 +9,36 @@ require_once __DIR__ . "/../../controllers/deliveryman_controller.php";
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Delivery Dashboard | CraveRush</title>
-  <link rel="stylesheet" href="../../assets/css/deliveryman.css?v=5">
+  <link rel="stylesheet" href="../../assets/css/deliveryman.css?v=6">
 </head>
 
 <body>
 
-  <aside class="sidebar" id="sidebar">
-    <div class="sidebar-logo">
-      <img src="../../assets/images/logo.png" alt="CraveRush">
-    </div>
-
-    <nav class="sidebar-menu">
-      <a href="dashboard.php" class="menu-item active">
-        <img src="../../assets/images/home.png" alt="Dashboard" class="menu-icon">
-        Dashboard
-      </a>
-
-      <a href="orders.php" class="menu-item">
-        <img src="../../assets/images/assigned.png" alt="Assigned Deliveries" class="menu-icon">
-        Assigned Deliveries
-      </a>
-
-      <a href="current.php" class="menu-item">
-        <img src="../../assets/images/currentDelivery.png" alt="Current Delivery" class="menu-icon">
-        Current Delivery
-      </a>
-
-      <a href="history.php" class="menu-item">
-        <img src="../../assets/images/history.png" alt="Delivery History" class="menu-icon">
-        Delivery History
-      </a>
-
-      <a href="earnings.php" class="menu-item">
-        <img src="../../assets/images/earnings.png" alt="Earnings" class="menu-icon">
-        Earnings
-      </a>
-
-      <a href="profile.php" class="menu-item">
-        <img src="../../assets/images/profile.png" alt="Profile" class="menu-icon">
-        Profile
-      </a>
-    </nav>
-
-    <div class="sidebar-bottom">
-      <a href="../../controllers/deliveryman_controller.php?action=logout" class="logout-btn">Logout</a>
-    </div>
-  </aside>
+  <?php require __DIR__ . "/partials/sidebar.php"; ?>
 
   <main class="main-content">
 
-    <header class="topbar">
-      <button type="button" class="menu-toggle" id="menuToggle">☰</button>
-
-      <div>
-        <h1>Delivery Dashboard</h1>
-        <p>Welcome back, <?= htmlspecialchars($deliveryman["name"]) ?>.</p>
-        <p>Area: <?= htmlspecialchars($deliveryman["area_name"]) ?></p>
-      </div>
-
+    <?php
+      $pageTitle = "Delivery Dashboard";
+      $pageSubtitle = "Welcome back, " . htmlspecialchars($deliveryman["name"]) . ". Area: " . htmlspecialchars($deliveryman["area_name"]);
+      $headerExtra = '
       <div class="availability">
         <div>
           <small>Online Status</small>
-          <span id="onlineStatusText">
-            <?= htmlspecialchars($deliveryman["online_status"]) ?>
-          </span>
+          <span id="onlineStatusText">' . htmlspecialchars($deliveryman["online_status"]) . '</span>
         </div>
 
-        <button type="button" class="availability-toggle <?= ($deliveryman["online_status"] == "Online") ? "active" : "" ?>" id="onlineToggle">
+        <button type="button" class="availability-toggle ' . (($deliveryman["online_status"] == "Online") ? "active" : "") . '" id="onlineToggle">
           <span></span>
         </button>
 
         <div>
           <small>Availability</small>
-          <strong id="availabilityStatus">
-            <?= htmlspecialchars($deliveryman["availability_status"]) ?>
-          </strong>
+          <strong id="availabilityStatus">' . htmlspecialchars($deliveryman["availability_status"]) . '</strong>
         </div>
-      </div>
-    </header>
+      </div>';
+      require __DIR__ . "/partials/header.php";
+    ?>
 
     <section class="stats-grid">
 
@@ -288,24 +240,11 @@ require_once __DIR__ . "/../../controllers/deliveryman_controller.php";
 
     </section>
 
-    <!-- Available Orders Section -->
-    <section class="content-card" style="margin-top: 2rem;">
-      <div class="card-heading">
-        <div>
-          <h2>Available Orders in Your Area</h2>
-          <p>Orders marked as Prepared that need delivery</p>
-        </div>
-        <button class="btn-primary" onclick="loadAvailableOrders()">↻ Refresh</button>
-      </div>
-      
-      <div class="table-wrapper" id="availableOrdersContainer">
-        <p>Loading available orders...</p>
-      </div>
-    </section>
-
   </main>
 
-  <script src="../../assets/js/deliveryman.js?v=1"></script>
+  <?php $footerAssetPath = "../../"; require_once __DIR__ . "/../partials/footer.php"; ?>
+
+  <script src="../../assets/js/deliveryman.js?v=3"></script>
 </body>
 
 </html>

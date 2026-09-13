@@ -10,52 +10,25 @@ $restaurantId = $_SESSION['restaurant_id'];
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Restaurant Dashboard | CraveRush</title>
     <!-- Use correct relative path based on the file being in views/ -->
-    <link rel="stylesheet" href="../../assets/css/restaurant.css">
+    <link rel="stylesheet" href="../../assets/css/restaurant.css?v=2">
 </head>
 
 <body>
 
-    <aside class="sidebar" id="sidebar">
-
-        <div class="sidebar-logo">
-            <img src="../../assets/images/logo.png" alt="CraveRush">
-        </div>
-
-        <nav class="sidebar-menu">
-
-            <div class="menu-item active" id="nav-overview" onclick="showTab('overview')">
-                🏠 Overview
-            </div>
-
-            <div class="menu-item" id="nav-menu" onclick="showTab('menu')">
-                🍕 Menu Management
-            </div>
-
-            <div class="menu-item" id="nav-orders" onclick="showTab('orders')">
-                📋 Orders
-            </div>
-
-        </nav>
-
-        <div class="sidebar-bottom">
-            <a href="../../controllers/restaurant_controller.php?action=logout" class="logout-btn">Logout</a>
-        </div>
-
-    </aside>
+    <?php require __DIR__ . "/partials/sidebar.php"; ?>
 
 
     <main class="main-content">
 
-        <header class="topbar">
-            <div>
-                <h1>Restaurant Dashboard</h1>
-                <p>Welcome back, <strong><?= htmlspecialchars($restaurant["name"]) ?></strong></p>
-            </div>
+        <?php
+            $pageTitle = "Restaurant Dashboard";
+            $pageSubtitle = "Welcome back, " . $restaurant["name"];
+            $badgeClass = ($restaurant["availability_status"] == "Open") ? "" : "closed";
+            $headerExtra = '<span class="status-badge ' . $badgeClass . '">' . htmlspecialchars($restaurant["availability_status"]) . '</span>';
+            require __DIR__ . "/partials/header.php";
+        ?>
 
-            <span class="status-badge <?= ($restaurant["availability_status"] == "Open") ? "" : "closed" ?>">
-                <?= htmlspecialchars($restaurant["availability_status"]) ?>
-            </span>
-        </header>
+        <?php require __DIR__ . "/partials/alerts.php"; ?>
 
 
         <!-- ── Toast Notification ─────────────────────────────────────── -->
@@ -183,6 +156,11 @@ $restaurantId = $_SESSION['restaurant_id'];
             <div class="field">
                 <label for="itemDescription">Description</label>
                 <textarea id="itemDescription" placeholder="Short description (optional)"></textarea>
+            </div>
+
+            <div class="field">
+                <label for="itemImage">Photo (optional)</label>
+                <input type="file" id="itemImage" accept="image/jpeg,image/png,image/webp">
             </div>
 
             <div class="modal-buttons">

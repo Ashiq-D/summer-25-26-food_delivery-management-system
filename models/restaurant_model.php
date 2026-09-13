@@ -14,7 +14,8 @@ function getRestaurantById($restaurantId)
         Email AS email,
         Username AS username,
         Area_ID AS area_id,
-        Availability_Status AS availability_status
+        Availability_Status AS availability_status,
+        Profile_Image_Path AS profile_image
         FROM Restaurant
         WHERE Restaurant_ID = ?"
     );
@@ -31,6 +32,60 @@ function getRestaurantById($restaurantId)
     return $restaurant;
 }
 
+function updateRestaurantProfile($restaurantId, $name, $email, $username)
+{
+    global $conn;
+
+    $stmt = mysqli_prepare(
+        $conn,
+        "UPDATE Restaurant SET Name = ?, Email = ?, Username = ? WHERE Restaurant_ID = ?"
+    );
+
+    mysqli_stmt_bind_param($stmt, "sssi", $name, $email, $username, $restaurantId);
+    $ok = mysqli_stmt_execute($stmt);
+
+    mysqli_stmt_close($stmt);
+
+    return $ok;
+}
+
+function restaurantUsernameExistsForOther($username, $restaurantId)
+{
+    global $conn;
+
+    $stmt = mysqli_prepare(
+        $conn,
+        "SELECT Restaurant_ID FROM Restaurant WHERE Username = ? AND Restaurant_ID != ?"
+    );
+
+    mysqli_stmt_bind_param($stmt, "si", $username, $restaurantId);
+    mysqli_stmt_execute($stmt);
+
+    $result = mysqli_stmt_get_result($stmt);
+    $exists = mysqli_num_rows($result) > 0;
+
+    mysqli_stmt_close($stmt);
+
+    return $exists;
+}
+
+function updateRestaurantProfileImage($restaurantId, $imagePath)
+{
+    global $conn;
+
+    $stmt = mysqli_prepare(
+        $conn,
+        "UPDATE Restaurant SET Profile_Image_Path = ? WHERE Restaurant_ID = ?"
+    );
+
+    mysqli_stmt_bind_param($stmt, "si", $imagePath, $restaurantId);
+    $ok = mysqli_stmt_execute($stmt);
+
+    mysqli_stmt_close($stmt);
+
+    return $ok;
+}
+
 function getMenuItemsByRestaurant($restaurantId)
 {
     global $conn;
@@ -42,7 +97,8 @@ function getMenuItemsByRestaurant($restaurantId)
         Description AS description,
         Price AS price,
         Category AS category,
-        Availability_Status AS availability_status
+        Availability_Status AS availability_status,
+        Image_Path AS image_path
         FROM Food_Item
         WHERE Restaurant_ID = ?
         ORDER BY Food_ID ASC"
@@ -65,7 +121,7 @@ function getMenuItemsByRestaurant($restaurantId)
     return $items;
 }
 
-function addMenuItemForRestaurant($restaurantId, $name, $description, $price, $category)
+function addMenuItemForRestaurant($restaurantId, $name, $description, $price, $category, $imagePath = null)
 {
     global $conn;
 
@@ -74,19 +130,20 @@ function addMenuItemForRestaurant($restaurantId, $name, $description, $price, $c
     $stmt = mysqli_prepare(
         $conn,
         "INSERT INTO Food_Item
-        (Restaurant_ID, Name, Description, Price, Category, Availability_Status)
-        VALUES (?, ?, ?, ?, ?, ?)"
+        (Restaurant_ID, Name, Description, Price, Category, Availability_Status, Image_Path)
+        VALUES (?, ?, ?, ?, ?, ?, ?)"
     );
 
     mysqli_stmt_bind_param(
         $stmt,
-        "issdss",
+        "issdsss",
         $restaurantId,
         $name,
         $description,
         $price,
         $category,
-        $availabilityStatus
+        $availabilityStatus,
+        $imagePath
     );
 
     $success = mysqli_stmt_execute($stmt);
@@ -94,6 +151,28 @@ function addMenuItemForRestaurant($restaurantId, $name, $description, $price, $c
     mysqli_stmt_close($stmt);
 
     return $success;
+}
+
+function updateMenuItemImage($foodId, $restaurantId, $imagePath)
+{
+    global $conn;
+
+    $stmt = mysqli_prepare(
+        $conn,
+        "UPDATE Food_Item
+        SET Image_Path = ?
+        WHERE Food_ID = ?
+        AND Restaurant_ID = ?"
+    );
+
+    mysqli_stmt_bind_param($stmt, "sii", $imagePath, $foodId, $restaurantId);
+    mysqli_stmt_execute($stmt);
+
+    $affectedRows = mysqli_stmt_affected_rows($conn);
+
+    mysqli_stmt_close($stmt);
+
+    return $affectedRows > 0;
 }
 
 function toggleMenuItemAvailability($foodId, $restaurantId, $newStatus)
@@ -118,7 +197,7 @@ function toggleMenuItemAvailability($foodId, $restaurantId, $newStatus)
     return $affectedRows > 0;
 }
 
-function getAllRestaurants()
+function getAllRestaurantsForCustomer()
 {
     global $conn;
 
@@ -129,6 +208,7 @@ function getAllRestaurants()
               r.Username AS username,
               r.Area_ID AS area_id,
               r.Availability_Status AS availability_status,
+              r.Profile_Image_Path AS profile_image,
               a.Area_Name AS area_name
               FROM Restaurant r
               LEFT JOIN Area a ON r.Area_ID = a.Area_ID";

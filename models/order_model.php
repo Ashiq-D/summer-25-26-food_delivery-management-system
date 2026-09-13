@@ -150,6 +150,23 @@ class Order
          * ---------------------------------------------------------------- */
 
         $deliveryFee = 50.00;
+
+        $feeStmt = mysqli_prepare(
+            $this->conn,
+            "SELECT Setting_Value FROM Settings WHERE Setting_Key = 'delivery_fee'"
+        );
+
+        if ($feeStmt) {
+            mysqli_stmt_execute($feeStmt);
+            $feeResult = mysqli_stmt_get_result($feeStmt);
+            $feeRow    = mysqli_fetch_assoc($feeResult);
+            mysqli_stmt_close($feeStmt);
+
+            if ($feeRow && $feeRow["Setting_Value"] !== null && $feeRow["Setting_Value"] !== "") {
+                $deliveryFee = (float)$feeRow["Setting_Value"];
+            }
+        }
+
         $total       = $foodSubtotal + $deliveryFee;
 
         /* ----------------------------------------------------------------

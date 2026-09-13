@@ -40,6 +40,40 @@ function showToast(message, isError)
     }, 3500);
 }
 
+// ── Sidebar + profile dropdown toggle (matches Admin/Deliveryman) ────────
+
+var menuToggle = document.getElementById("menuToggle");
+var sidebar = document.getElementById("sidebar");
+
+if (menuToggle && sidebar)
+{
+    menuToggle.addEventListener("click", function()
+    {
+        sidebar.classList.toggle("show");
+    });
+}
+
+
+var profileToggle = document.getElementById("profileToggle");
+var profileDropdown = document.getElementById("profileDropdown");
+
+if (profileToggle && profileDropdown)
+{
+    profileToggle.addEventListener("click", function(event)
+    {
+        event.stopPropagation();
+        profileDropdown.classList.toggle("show");
+    });
+
+    document.addEventListener("click", function(event)
+    {
+        if (!profileToggle.contains(event.target))
+        {
+            profileDropdown.classList.remove("show");
+        }
+    });
+}
+
 // ── Load menu items via AJAX ──────────────────────────────────────────
 
 function loadMenuItems()
@@ -106,7 +140,15 @@ function renderMenuGrid(items)
         var emoji = categoryEmoji[item.category] || "🍽️";
 
         html += "<div class=\"food-card\" data-name=\"" + item.name.toLowerCase() + "\">";
-        html += "  <div class=\"food-emoji\">" + emoji + "</div>";
+
+        if (item.image_path)
+        {
+            html += "  <img class=\"food-thumb\" src=\"../../" + item.image_path + "\" alt=\"" + escapeHtml(item.name) + "\">";
+        }
+        else
+        {
+            html += "  <div class=\"food-emoji\">" + emoji + "</div>";
+        }
         html += "  <div class=\"food-name\">" + escapeHtml(item.name) + "</div>";
         html += "  <div class=\"food-category\">" + escapeHtml(item.category) + "</div>";
         html += "  <div class=\"food-price\">৳" + parseFloat(item.price).toFixed(2) + "</div>";
@@ -197,6 +239,7 @@ function openModal()
     document.getElementById("itemCategory").value    = "";
     document.getElementById("itemPrice").value       = "";
     document.getElementById("itemDescription").value = "";
+    document.getElementById("itemImage").value        = "";
 }
 
 function closeModal()
@@ -243,6 +286,12 @@ function submitAddItem()
     formData.append("category",     category);
     formData.append("price",        price);
     formData.append("description",  description);
+
+    var imageFile = document.getElementById("itemImage").files[0];
+    if (imageFile)
+    {
+        formData.append("food_image", imageFile);
+    }
 
     fetch("../../controllers/restaurant_ajax_controller.php",
     {

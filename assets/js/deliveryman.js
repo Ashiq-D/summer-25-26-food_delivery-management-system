@@ -10,6 +10,27 @@ if (menuToggle && sidebar)
 }
 
 
+var profileToggle = document.getElementById("profileToggle");
+var profileDropdown = document.getElementById("profileDropdown");
+
+if (profileToggle && profileDropdown)
+{
+    profileToggle.addEventListener("click", function(event)
+    {
+        event.stopPropagation();
+        profileDropdown.classList.toggle("show");
+    });
+
+    document.addEventListener("click", function(event)
+    {
+        if (!profileToggle.contains(event.target))
+        {
+            profileDropdown.classList.remove("show");
+        }
+    });
+}
+
+
 var onlineToggle = document.getElementById("onlineToggle");
 var onlineStatusText = document.getElementById("onlineStatusText");
 
@@ -304,92 +325,3 @@ function validateProfileForm()
 
     return valid;
 }
-
-// ── Available Orders Logic ───────────────────────────────────────────────────
-
-function loadAvailableOrders() {
-    var container = document.getElementById("availableOrdersContainer");
-    if (!container) return;
-
-    container.innerHTML = "<p>Loading available orders...</p>";
-
-    var xhttp = new XMLHttpRequest();
-    xhttp.onreadystatechange = function() {
-        if (this.readyState == 4) {
-            if (this.status == 200) {
-                var response = JSON.parse(this.responseText);
-                if (response.success) {
-                    renderAvailableOrders(response.data);
-                } else {
-                    container.innerHTML = "<p>" + response.message + "</p>";
-                }
-            } else {
-                container.innerHTML = "<p>Failed to load available orders.</p>";
-            }
-        }
-    };
-    
-    xhttp.open("POST", "../../controllers/deliveryman_ajax_controller.php", true);
-    xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-    xhttp.send("action=get_available_orders");
-}
-
-function renderAvailableOrders(orders) {
-    var container = document.getElementById("availableOrdersContainer");
-    
-    if (!orders || orders.length === 0) {
-        container.innerHTML = "<p>No orders currently available in your area.</p>";
-        return;
-    }
-
-    var html = '<table class="data-table"><thead><tr>' +
-               '<th>Order</th><th>Restaurant</th><th>Items</th><th>Delivery Fee</th><th>Action</th>' +
-               '</tr></thead><tbody>';
-
-    for (var i = 0; i < orders.length; i++) {
-        var order = orders[i];
-        html += '<tr>';
-        html += '<td>#CR-' + order.order_id + '</td>';
-        html += '<td>' + order.restaurant_name + '</td>';
-        html += '<td>' + order.item_count + '</td>';
-        html += '<td>৳' + order.delivery_fee + '</td>';
-        html += '<td><button class="btn-primary" onclick="acceptOrder(' + order.order_id + ')">Accept</button></td>';
-        html += '</tr>';
-    }
-
-    html += '</tbody></table>';
-    container.innerHTML = html;
-}
-
-function acceptOrder(orderId) {
-    if (!confirm("Are you sure you want to accept this order?")) return;
-
-    var xhttp = new XMLHttpRequest();
-    xhttp.onreadystatechange = function() {
-        if (this.readyState == 4) {
-            if (this.status == 200) {
-                var response = JSON.parse(this.responseText);
-                if (response.success) {
-                    alert(response.message);
-                    window.location.href = "orders.php"; // Redirect to assigned order page
-                } else {
-                    alert(response.message);
-                    loadAvailableOrders(); // refresh on failure
-                }
-            } else {
-                alert("Failed to connect to the server.");
-            }
-        }
-    };
-    
-    xhttp.open("POST", "../../controllers/deliveryman_ajax_controller.php", true);
-    xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-    xhttp.send("action=accept_order&order_id=" + orderId);
-}
-
-// Auto-load if the container exists on this page
-document.addEventListener("DOMContentLoaded", function() {
-    if (document.getElementById("availableOrdersContainer")) {
-        loadAvailableOrders();
-    }
-});

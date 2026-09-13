@@ -964,3 +964,265 @@ nav a:hover {
     }
 
 }
+
+/* ============================================================
+   NAV PROFILE DROPDOWN (avatar entry point, matches Admin/
+   Restaurant/Deliveryman)
+   ============================================================ */
+
+.topbar-profile {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.header-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: #ff4d00;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 15px;
+    flex-shrink: 0;
+    overflow: hidden;
+}
+
+.header-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.profile-caret {
+    color: #999999;
+    font-size: 10px;
+}
+
+.profile-dropdown {
+    display: none;
+    position: absolute;
+    top: calc(100% + 12px);
+    right: 0;
+    background: #ffffff;
+    border: 1px solid #eeeeee;
+    border-radius: 8px;
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.10);
+    min-width: 130px;
+    overflow: hidden;
+    z-index: 1200;
+}
+
+.profile-dropdown.show {
+    display: block;
+}
+
+.profile-dropdown a {
+    display: block;
+    padding: 10px 14px;
+    color: #333333;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.profile-dropdown a:hover {
+    background: #f7f7f7;
+}
+
+.profile-dropdown a.logout-link {
+    color: #d93025;
+    font-weight: 700;
+}
+
+.profile-dropdown a.logout-link:hover {
+    background: #fff1f0;
+}
+
+
+/* ============================================================
+   PROFILE PAGE
+   ============================================================ */
+
+.profile-header-card {
+    background: #ffffff;
+    border-radius: 15px;
+    padding: 26px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+}
+
+.profile-avatar {
+    width: 72px;
+    height: 72px;
+    background: #ff4d00;
+    color: #ffffff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    font-weight: 700;
+    flex-shrink: 0;
+    overflow: hidden;
+}
+
+.profile-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.profile-header-card h2 {
+    color: #333333;
+    font-size: 21px;
+    margin-bottom: 4px;
+}
+
+.profile-header-card p {
+    color: #ff4d00;
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+.profile-header-card span {
+    color: #888888;
+    font-size: 12px;
+}
+
+.content-card {
+    background: #ffffff;
+    border-radius: 15px;
+    padding: 28px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+}
+
+.card-heading {
+    margin-bottom: 22px;
+}
+
+.card-heading h2 {
+    font-size: 20px;
+    color: #333333;
+    margin-bottom: 4px;
+}
+
+.card-heading p {
+    color: #777777;
+    font-size: 14px;
+}
+
+.profile-avatar-upload {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.profile-avatar-upload label {
+    cursor: pointer;
+    color: #ff4d00;
+    font-size: 13px;
+    font-weight: 700;
+    border: 1px solid #ff4d00;
+    border-radius: 8px;
+    padding: 9px 14px;
+    display: inline-block;
+}
+
+.profile-avatar-upload label:hover {
+    background: #fff5f0;
+}
+
+.profile-avatar-upload input[type="file"] {
+    display: none;
+}
+
+.profile-avatar-upload .file-chosen {
+    color: #888888;
+    font-size: 13px;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 18px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-group label {
+    color: #333333;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.form-group input,
+.form-group select {
+    background: #ffffff;
+    color: #333333;
+    border: 1px solid #dadada;
+    border-radius: 9px;
+    padding: 13px 16px;
+    font-size: 15px;
+    outline: none;
+    transition: 0.2s;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    border-color: #ff4d00;
+    box-shadow: 0 0 0 3px rgba(255, 77, 0, 0.10);
+}
+
+.form-actions {
+    margin-top: 20px;
+}
+
+.btn-primary {
+    background: #ff4d00;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    padding: 13px 26px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.btn-primary:hover {
+    background: #e64300;
+}
+
+.flash-alert {
+    padding: 14px 18px;
+    border-radius: 9px;
+    margin-bottom: 20px;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.flash-alert.success {
+    background: #eaf8ee;
+    color: #218838;
+    border: 1px solid #bfe8c9;
+}
+
+.flash-alert.error {
+    background: #fdecec;
+    color: #d93025;
+    border: 1px solid #f2c8c5;
+}
