@@ -60,7 +60,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST")
             $_SESSION["user_role"] = "customer";
             $_SESSION["customer_id"] = $user["customer_id"];
 
-            header("Location: ../../customer/customer_dashboard.php");
+            header("Location: ../customer/home.php");
             exit;
         }
 
@@ -75,7 +75,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST")
             $_SESSION["user_role"] = "restaurant";
             $_SESSION["restaurant_id"] = $user["restaurant_id"];
 
-            header("Location: ../../restaurant/restaurant_dashboard.php");
+            header("Location: ../restaurant_dashboard/restaurant_dashboard.php");
             exit;
         }
 

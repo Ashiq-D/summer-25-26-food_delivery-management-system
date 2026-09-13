@@ -288,6 +288,21 @@ require_once __DIR__ . "/../../controllers/deliveryman_controller.php";
 
     </section>
 
+    <!-- Available Orders Section -->
+    <section class="content-card" style="margin-top: 2rem;">
+      <div class="card-heading">
+        <div>
+          <h2>Available Orders in Your Area</h2>
+          <p>Orders marked as Prepared that need delivery</p>
+        </div>
+        <button class="btn-primary" onclick="loadAvailableOrders()">↻ Refresh</button>
+      </div>
+      
+      <div class="table-wrapper" id="availableOrdersContainer">
+        <p>Loading available orders...</p>
+      </div>
+    </section>
+
   </main>
 
   <script src="../../assets/js/deliveryman.js?v=1"></script>

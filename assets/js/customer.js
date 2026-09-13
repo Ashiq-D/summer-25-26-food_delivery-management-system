@@ -1112,15 +1112,28 @@ function renderTrackingBox(order) {
     }
 
     const currentStatus = order.Order_Status;
-    const currentIndex  = statuses.indexOf(currentStatus);
+    
+    // Map backend statuses to the 4 frontend steps
+    const frontendSteps = [
+        { key: "Order Confirmed", desc: "Your order has been confirmed." },
+        { key: "Preparing Food", desc: "The restaurant is preparing your food." },
+        { key: "Out for Delivery", desc: "Your deliveryman is on the way." },
+        { key: "Delivered", desc: "Your order has been delivered successfully." }
+    ];
 
-    const stepsHtml = statuses.map((status, index) => `
+    let currentIndex = 0;
+    if (currentStatus === "Pending") currentIndex = 0;
+    else if (currentStatus === "Preparing" || currentStatus === "Prepared" || currentStatus === "Ready") currentIndex = 1;
+    else if (currentStatus === "On The Way") currentIndex = 2;
+    else if (currentStatus === "Delivered") currentIndex = 3;
+
+    const stepsHtml = frontendSteps.map((step, index) => `
 
         <div class="tracking-step ${index <= currentIndex ? "active" : ""}">
 
             <div class="tracking-circle">
                 ${
-                    index < currentIndex
+                    index < currentIndex || (currentStatus === "Delivered" && index === currentIndex)
                         ? "✓"
                         : index === currentIndex
                             ? "●"
@@ -1129,15 +1142,15 @@ function renderTrackingBox(order) {
             </div>
 
             <div>
-                <h3>${escapeHtml(status)}</h3>
-                <p>${escapeHtml(statusDescription(status))}</p>
+                <h3>${escapeHtml(step.key)}</h3>
+                <p>${escapeHtml(step.desc)}</p>
             </div>
 
         </div>
 
         ${
-            index < statuses.length - 1
-                ? `<div class="tracking-line ${index < currentIndex ? "" : "inactive"}"></div>`
+            index < frontendSteps.length - 1
+                ? `<div class="tracking-line ${index < currentIndex || (currentStatus === "Delivered" && index === currentIndex) ? "" : "inactive"}"></div>`
                 : ""
         }
 
@@ -1546,13 +1559,18 @@ function submitReview() {
    INITIAL PAGE LOAD
    ============================================================ */
 
-/* Set initial area from the dropdown */
+/* Set initial area from the dropdown and filter restaurants */
 (function initArea() {
 
     const areaSelect = document.getElementById("customerArea");
 
     if (areaSelect) {
         customerArea = areaSelect.value;
+        
+        // Filter the initial PHP-injected restaurants by the default selected area
+        if (window.CUSTOMER_RESTAURANTS && Array.isArray(window.CUSTOMER_RESTAURANTS)) {
+            restaurants = window.CUSTOMER_RESTAURANTS.filter(r => r.area === customerArea);
+        }
     }
 
 })();

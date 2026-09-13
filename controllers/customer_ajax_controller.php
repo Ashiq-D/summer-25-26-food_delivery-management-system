@@ -72,13 +72,30 @@ function handleGetRestaurants($conn) {
 
     $restaurants = [];
     while ($row = mysqli_fetch_assoc($result)) {
-        $imagePath = "../../assets/images/restaurants/restaurant" . $row["Restaurant_ID"] . ".jpg";
+        $imagePath = "../../assets/images/restaurant" . (($row["Restaurant_ID"] - 1) % 5 + 1) . ".jpg";
+
+        $menus = getMenuItemsByRestaurant($row["Restaurant_ID"]);
+        $formattedMenus = [];
+        foreach ($menus as $m) {
+            if ($m['availability_status'] !== 'Available') {
+                continue;
+            }
+            $formattedMenus[] = [
+                'id' => (int)$m['food_id'],
+                'name' => $m['name'],
+                'image' => '../../assets/images/food' . (($m['food_id'] - 1) % 14 + 1) . '.jpg',
+                'description' => $m['description'],
+                'price' => (float)$m['price']
+            ];
+        }
+
         $restaurants[] = [
             "id"       => (int)$row["Restaurant_ID"],
             "name"     => $row["Name"],
             "area_id"  => (int)$row["Area_ID"],
             "area"     => $row["Area_Name"] ?? "",
             "image"    => $imagePath,
+            "menu"     => $formattedMenus
         ];
     }
     echo json_encode($restaurants);
@@ -124,13 +141,30 @@ function handleSearch($conn) {
 
     $restaurants = [];
     while ($row = mysqli_fetch_assoc($result)) {
-        $imagePath = "../../assets/images/restaurants/restaurant" . $row["Restaurant_ID"] . ".jpg";
+        $imagePath = "../../assets/images/restaurant" . (($row["Restaurant_ID"] - 1) % 5 + 1) . ".jpg";
+
+        $menus = getMenuItemsByRestaurant($row["Restaurant_ID"]);
+        $formattedMenus = [];
+        foreach ($menus as $m) {
+            if ($m['availability_status'] !== 'Available') {
+                continue;
+            }
+            $formattedMenus[] = [
+                'id' => (int)$m['food_id'],
+                'name' => $m['name'],
+                'image' => '../../assets/images/food' . (($m['food_id'] - 1) % 14 + 1) . '.jpg',
+                'description' => $m['description'],
+                'price' => (float)$m['price']
+            ];
+        }
+
         $restaurants[] = [
             "id"      => (int)$row["Restaurant_ID"],
             "name"    => $row["Name"],
             "area_id" => (int)$row["Area_ID"],
             "area"    => $row["Area_Name"] ?? "",
             "image"   => $imagePath,
+            "menu"    => $formattedMenus
         ];
     }
     mysqli_stmt_close($stmt);
@@ -139,7 +173,7 @@ function handleSearch($conn) {
 }
 
 function handleCreateOrder($conn) {
-    if (!isset($_SESSION["user_id"])) {
+    if (!isset($_SESSION["customer_id"])) {
         echo json_encode(["success" => false, "message" => "Please login first."]);
         exit;
     }
@@ -162,7 +196,7 @@ function handleCreateOrder($conn) {
         exit;
     }
 
-    $userId          = (int)$_SESSION["user_id"];
+    $userId          = (int)$_SESSION["customer_id"];
     $restaurantId    = (int)$data["restaurantId"];
     $paymentMethod   = trim($data["paymentMethod"]);
     $deliveryAddress = trim($data["deliveryAddress"]);
@@ -191,7 +225,7 @@ function handleCreateOrder($conn) {
 }
 
 function handleTrackOrder($conn) {
-    if (!isset($_SESSION["user_id"])) {
+    if (!isset($_SESSION["customer_id"])) {
         echo json_encode(["success" => false, "message" => "Please login first."]);
         exit;
     }
@@ -203,7 +237,7 @@ function handleTrackOrder($conn) {
     }
 
     $orderModel = new Order($conn);
-    $orderData = $orderModel->getOrderById($orderId, (int)$_SESSION["user_id"]);
+    $orderData = $orderModel->getOrderById($orderId, (int)$_SESSION["customer_id"]);
 
     if ($orderData) {
         echo json_encode([
@@ -226,7 +260,7 @@ function handleTrackOrder($conn) {
 }
 
 function handleSubmitReview($conn) {
-    if (!isset($_SESSION["user_id"])) {
+    if (!isset($_SESSION["customer_id"])) {
         echo json_encode(["success" => false, "message" => "Please login first."]);
         exit;
     }
@@ -259,7 +293,7 @@ function handleSubmitReview($conn) {
     }
 
     $reviewModel = new Review($conn);
-    $result = $reviewModel->addReview((int)$_SESSION["user_id"], $restaurantId, $rating, $comment);
+    $result = $reviewModel->addReview((int)$_SESSION["customer_id"], $restaurantId, $rating, $comment);
 
     if ($result) {
         echo json_encode(["success" => true, "message" => "Review submitted successfully."]);

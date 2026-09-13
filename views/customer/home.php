@@ -1,4 +1,3 @@
-
 <?php
 
 /*
@@ -56,7 +55,7 @@ $restaurants = $controller->getRestaurants();
 
             <a href="#" onclick="showTracking()">Track Order</a>
 
-            <a href="#" onclick="openCart()">My Order</a>
+            <a href="#" onclick="openCart()">Cart</a>
 
             <a href="#" onclick="showReview()">Rating</a>
 

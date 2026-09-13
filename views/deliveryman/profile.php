@@ -155,18 +155,22 @@ require_once __DIR__ . "/../../controllers/deliveryman_controller.php";
             <label for="vehicleType">Vehicle Type</label>
 
             <select id="vehicleType" name="vehicle_type" disabled>
-                <option value="Bicycle" <?= ($deliveryman["vehicle_type"] == "Bicycle") ? "selected" : "" ?>>
+
+              <option value="Bicycle" <?= ($deliveryman["vehicle_type"] == "Bicycle") ? "selected" : "" ?>>
                 Bicycle
-                </option>
-                <option value="Motorcycle" <?= ($deliveryman["vehicle_type"] == "Motorcycle") ? "selected" : "" ?>>
+              </option>
+
+              <option value="Motorcycle" <?= ($deliveryman["vehicle_type"] == "Motorcycle") ? "selected" : "" ?>>
                 Motorcycle
-                </option>
-                <option value="Car" <?= ($deliveryman["vehicle_type"] == "Car") ? "selected" : "" ?>>
+              </option>
+
+              <option value="Car" <?= ($deliveryman["vehicle_type"] == "Car") ? "selected" : "" ?>>
                 Car
-                </option>
+              </option>
+
             </select>
             <span class="error" id="vehicleError"></span>
-           </div>
+          </div>
 
           <div class="field">
             <label for="deliveryArea">Area</label>

@@ -651,7 +651,7 @@ function completeDeliveryTransaction($deliverymanId, $deliveryId, $orderId, $pay
             $conn,
             "UPDATE `Order`
             SET Order_Status = 'Delivered',
-            Payment_Status = 'Successful'
+            Payment_Status = 'Paid'
             WHERE Order_ID = ?
             AND Order_Status = 'On The Way'"
         );
@@ -713,4 +713,99 @@ function completeDeliveryTransaction($deliverymanId, $deliveryId, $orderId, $pay
     mysqli_rollback($conn);
 
     return false;
+}
+
+function getAvailableOrdersForArea($areaId)
+{
+    global $conn;
+
+    $stmt = mysqli_prepare(
+        $conn,
+        "SELECT o.Order_ID AS order_id,
+        o.Total_Amount AS total_amount,
+        o.Delivery_Fee AS delivery_fee,
+        o.Payment_Method AS payment_method,
+        r.Name AS restaurant_name,
+        c.Name AS customer_name,
+        a.Area_Name AS area_name,
+        (
+            SELECT COALESCE(SUM(oi.Quantity), 0)
+            FROM Order_Item oi
+            WHERE oi.Order_ID = o.Order_ID
+        ) AS item_count
+        FROM `Order` o
+        JOIN Restaurant r ON o.Restaurant_ID = r.Restaurant_ID
+        JOIN Customer c ON o.Customer_ID = c.Customer_ID
+        JOIN Area a ON o.Delivery_Area_ID = a.Area_ID
+        WHERE o.Delivery_Area_ID = ?
+        AND o.Order_Status = 'Prepared'
+        ORDER BY o.Order_ID ASC"
+    );
+
+    mysqli_stmt_bind_param($stmt, "i", $areaId);
+    mysqli_stmt_execute($stmt);
+
+    $result = mysqli_stmt_get_result($stmt);
+    $orders = [];
+    while ($row = mysqli_fetch_assoc($result)) {
+        $orders[] = $row;
+    }
+    mysqli_stmt_close($stmt);
+
+    return $orders;
+}
+
+function acceptOrder($deliverymanId, $orderId, $areaId)
+{
+    global $conn;
+
+    mysqli_begin_transaction($conn);
+
+    $stmt = mysqli_prepare(
+        $conn,
+        "SELECT Order_ID FROM `Order` 
+        WHERE Order_ID = ? 
+        AND Delivery_Area_ID = ? 
+        AND Order_Status = 'Prepared'
+        FOR UPDATE"
+    );
+    mysqli_stmt_bind_param($stmt, "ii", $orderId, $areaId);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+    $order = mysqli_fetch_assoc($result);
+    mysqli_stmt_close($stmt);
+
+    if (!$order) {
+        mysqli_rollback($conn);
+        return false;
+    }
+
+    $insertStmt = mysqli_prepare(
+        $conn,
+        "INSERT INTO Delivery (Order_ID, Deliveryman_ID, Delivery_Status) VALUES (?, ?, 'Assigned')"
+    );
+    mysqli_stmt_bind_param($insertStmt, "ii", $orderId, $deliverymanId);
+    $inserted = mysqli_stmt_execute($insertStmt);
+    mysqli_stmt_close($insertStmt);
+
+    if (!$inserted) {
+        mysqli_rollback($conn);
+        return false;
+    }
+
+    $updateStmt = mysqli_prepare(
+        $conn,
+        "UPDATE `Order` SET Order_Status = 'Ready' WHERE Order_ID = ?"
+    );
+    mysqli_stmt_bind_param($updateStmt, "i", $orderId);
+    $updated = mysqli_stmt_execute($updateStmt);
+    mysqli_stmt_close($updateStmt);
+
+    if (!$updated) {
+        mysqli_rollback($conn);
+        return false;
+    }
+
+    mysqli_commit($conn);
+    return true;
 }

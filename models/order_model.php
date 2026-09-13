@@ -101,7 +101,7 @@ class Order
              */
             $foodStmt = mysqli_prepare(
                 $this->conn,
-                "SELECT Food_ID, Name, Price, Is_Available, Restaurant_ID
+                "SELECT Food_ID, Name, Price, Availability_Status, Restaurant_ID
                  FROM Food_Item
                  WHERE Food_ID = ?
                    AND Restaurant_ID = ?"
@@ -122,7 +122,7 @@ class Order
                 return false;
             }
 
-            if ((int)$foodRow["Is_Available"] !== 1) {
+            if ($foodRow["Availability_Status"] !== 'Available') {
                 /* Food is not currently available */
                 return false;
             }

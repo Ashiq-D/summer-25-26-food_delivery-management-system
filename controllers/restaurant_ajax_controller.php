@@ -118,6 +118,34 @@ else if ($action == "toggle_availability")
     sendJson(false, "Failed to update availability, or item not found.");
 }
 
+// ── Get orders ────────────────────────────────────────────────────────────────
+
+else if ($action == "get_orders")
+{
+    $orders = getOrdersByRestaurant($restaurantId);
+    sendJson(true, "Orders loaded.", $orders);
+}
+
+// ── Update order status ───────────────────────────────────────────────────────
+
+else if ($action == "update_order_status")
+{
+    $orderId   = (int) ($_POST["order_id"] ?? 0);
+    $newStatus = cleanInput($_POST["status"] ?? "");
+
+    if ($orderId <= 0 || $newStatus == "")
+    {
+        sendJson(false, "Invalid order or status.");
+    }
+
+    if (updateOrderStatus($orderId, $restaurantId, $newStatus))
+    {
+        sendJson(true, "Order status updated to " . $newStatus . ".");
+    }
+
+    sendJson(false, "Failed to update order status. Ensure the order is in the correct state.");
+}
+
 // ── Unknown action ────────────────────────────────────────────────────────────
 
 else

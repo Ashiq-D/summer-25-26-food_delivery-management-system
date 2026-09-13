@@ -1,5 +1,6 @@
 <?php
-require_once __DIR__ . "/../controllers/restaurant_controller.php";
+require_once "../../controllers/restaurant_controller.php";
+$restaurantId = $_SESSION['restaurant_id'];
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -9,7 +10,7 @@ require_once __DIR__ . "/../controllers/restaurant_controller.php";
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Restaurant Dashboard | CraveRush</title>
     <!-- Use correct relative path based on the file being in views/ -->
-    <link rel="stylesheet" href="../assets/css/restaurant.css">
+    <link rel="stylesheet" href="../../assets/css/restaurant.css">
 </head>
 
 <body>
@@ -17,7 +18,7 @@ require_once __DIR__ . "/../controllers/restaurant_controller.php";
     <aside class="sidebar" id="sidebar">
 
         <div class="sidebar-logo">
-            <img src="../assets/images/logo.png" alt="CraveRush">
+            <img src="../../assets/images/logo.png" alt="CraveRush">
         </div>
 
         <nav class="sidebar-menu">
@@ -30,10 +31,14 @@ require_once __DIR__ . "/../controllers/restaurant_controller.php";
                 🍕 Menu Management
             </div>
 
+            <div class="menu-item" id="nav-orders" onclick="showTab('orders')">
+                📋 Orders
+            </div>
+
         </nav>
 
         <div class="sidebar-bottom">
-            <a href="../controllers/restaurant_controller.php?action=logout" class="logout-btn">Logout</a>
+            <a href="../../controllers/restaurant_controller.php?action=logout" class="logout-btn">Logout</a>
         </div>
 
     </aside>
@@ -117,6 +122,28 @@ require_once __DIR__ . "/../controllers/restaurant_controller.php";
 
         </div>
 
+        <!-- ── Orders Tab ───────────────────────────────────────────────── -->
+        <div id="tab-orders" class="tab-section">
+
+            <div class="content-card">
+
+                <div class="card-heading">
+                    <div>
+                        <h2>Orders</h2>
+                        <p>Manage incoming orders and update statuses.</p>
+                    </div>
+
+                    <button class="btn-primary" onclick="loadOrders()">↻ Refresh</button>
+                </div>
+
+                <div class="orders-grid" id="ordersGrid">
+                    <p class="empty-state">Loading orders...</p>
+                </div>
+
+            </div>
+
+        </div>
+
     </main>
 
 
@@ -167,7 +194,7 @@ require_once __DIR__ . "/../controllers/restaurant_controller.php";
     </div>
 
     <!-- External JS for Restaurant Dashboard -->
-    <script src="../assets/js/restaurant.js"></script>
+    <script src="../../assets/js/restaurant.js"></script>
 
 </body>
 

@@ -19,6 +19,10 @@ function showTab(tab)
     {
         loadMenuItems();
     }
+    else if (tab === "orders")
+    {
+        loadOrders();
+    }
 }
 
 // ── Toast ─────────────────────────────────────────────────────────────
@@ -43,7 +47,7 @@ function loadMenuItems()
     var formData = new FormData();
     formData.append("action", "get_items");
 
-    fetch("../controllers/restaurant_ajax_controller.php",
+    fetch("../../controllers/restaurant_ajax_controller.php",
     {
         method: "POST",
         body: formData
@@ -159,7 +163,7 @@ function toggleAvailability(foodId, newStatus)
     formData.append("food_id",  foodId);
     formData.append("status",   newStatus);
 
-    fetch("../controllers/restaurant_ajax_controller.php",
+    fetch("../../controllers/restaurant_ajax_controller.php",
     {
         method: "POST",
         body: formData
@@ -240,7 +244,7 @@ function submitAddItem()
     formData.append("price",        price);
     formData.append("description",  description);
 
-    fetch("../controllers/restaurant_ajax_controller.php",
+    fetch("../../controllers/restaurant_ajax_controller.php",
     {
         method: "POST",
         body: formData
@@ -274,3 +278,121 @@ document.getElementById("addModal").addEventListener("click", function(e)
         closeModal();
     }
 });
+
+// ── Orders Management ──────────────────────────────────────────────────
+
+function loadOrders()
+{
+    var formData = new FormData();
+    formData.append("action", "get_orders");
+
+    fetch("../../controllers/restaurant_ajax_controller.php",
+    {
+        method: "POST",
+        body: formData
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data)
+    {
+        if (data.success)
+        {
+            renderOrdersGrid(data.data);
+        }
+        else
+        {
+            document.getElementById("ordersGrid").innerHTML =
+                "<p class=\"empty-state\">" + data.message + "</p>";
+        }
+    })
+    .catch(function()
+    {
+        document.getElementById("ordersGrid").innerHTML =
+            "<p class=\"empty-state\">Failed to load orders.</p>";
+    });
+}
+
+function renderOrdersGrid(orders)
+{
+    var grid = document.getElementById("ordersGrid");
+
+    if (!orders || orders.length === 0)
+    {
+        grid.innerHTML = "<p class=\"empty-state\">No incoming orders yet.</p>";
+        return;
+    }
+
+    var html = "";
+
+    orders.forEach(function(order)
+    {
+        var badgeClass = "";
+        if (order.Order_Status === "Pending") badgeClass = "badge-pending";
+        else if (order.Order_Status === "Preparing") badgeClass = "badge-preparing";
+        else if (order.Order_Status === "Prepared") badgeClass = "badge-prepared";
+        else if (order.Order_Status === "Delivered") badgeClass = "badge-delivered";
+
+        html += "<div class=\"order-card\">";
+        html += "  <div class=\"order-header\">";
+        html += "    <h3>Order #CR" + order.Order_ID + "</h3>";
+        html += "    <span class=\"status-badge " + badgeClass + "\">" + escapeHtml(order.Order_Status) + "</span>";
+        html += "  </div>";
+        html += "  <div class=\"order-details\">";
+        html += "    <p><strong>Customer:</strong> " + escapeHtml(order.Customer_Name) + "</p>";
+        html += "    <p><strong>Time:</strong> " + escapeHtml(order.Order_Date) + "</p>";
+        html += "    <p><strong>Total:</strong> ৳" + parseFloat(order.Total_Amount).toFixed(2) + " (" + escapeHtml(order.Payment_Method) + ")</p>";
+        html += "  </div>";
+        
+        html += "  <div class=\"order-items\">";
+        html += "    <h4>Items:</h4><ul>";
+        order.items.forEach(function(item) {
+            var customText = item.Customization ? " (" + escapeHtml(item.Customization) + ")" : "";
+            html += "<li>" + parseInt(item.Quantity) + "x " + escapeHtml(item.Food_Name_At_Purchase) + customText + "</li>";
+        });
+        html += "    </ul>";
+        html += "  </div>";
+
+        html += "  <div class=\"order-actions\">";
+        
+        if (order.Order_Status === "Pending") {
+            html += "    <button class=\"btn-primary\" onclick=\"updateOrderStatus(" + order.Order_ID + ", 'Preparing')\">Confirm Order</button>";
+        } else if (order.Order_Status === "Preparing") {
+            html += "    <button class=\"btn-primary\" onclick=\"updateOrderStatus(" + order.Order_ID + ", 'Prepared')\">Mark as Prepared</button>";
+        }
+        
+        html += "  </div>";
+        html += "</div>";
+    });
+
+    grid.innerHTML = html;
+}
+
+function updateOrderStatus(orderId, newStatus)
+{
+    var formData = new FormData();
+    formData.append("action", "update_order_status");
+    formData.append("order_id", orderId);
+    formData.append("status", newStatus);
+
+    fetch("../../controllers/restaurant_ajax_controller.php",
+    {
+        method: "POST",
+        body: formData
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data)
+    {
+        if (data.success)
+        {
+            showToast(data.message, false);
+            loadOrders();
+        }
+        else
+        {
+            showToast(data.message, true);
+        }
+    })
+    .catch(function()
+    {
+        showToast("Request failed. Please try again.", true);
+    });
+}

@@ -1,6 +1,6 @@
 <?php
 
-include_once __DIR__ . "/../config/database.php";
+include_once __DIR__ . "/../config/config.php";
 include_once __DIR__ . "/../models/restaurant_model.php";
 
 class CustomerController
@@ -12,15 +12,38 @@ class CustomerController
      */
     public function getRestaurants()
     {
-        $restaurant = new Restaurant($GLOBALS["conn"]);
+        $restaurants = getAllRestaurants();
+        $formatted = [];
 
-        return $restaurant->getAllRestaurants();
+        foreach ($restaurants as $r) {
+            $menus = getMenuItemsByRestaurant($r['restaurant_id']);
+            $formattedMenus = [];
+
+            foreach ($menus as $m) {
+                // Ensure price is numeric
+                $formattedMenus[] = [
+                    'id' => (int)$m['food_id'],
+                    'name' => $m['name'],
+                    'image' => '../../assets/images/food' . ((int)$m['food_id'] % 14 + 1) . '.jpg',
+                    'description' => $m['description'],
+                    'price' => (float)$m['price']
+                ];
+            }
+
+            $formatted[] = [
+                'id' => (int)$r['restaurant_id'],
+                'name' => $r['name'],
+                'image' => '../../assets/images/restaurant' . (((int)$r['restaurant_id'] - 1) % 5 + 1) . '.jpg',
+                'area' => $r['area_name'] ?? 'Unknown Area',
+                'menu' => $formattedMenus
+            ];
+        }
+
+        return $formatted;
     }
 
     /**
      * Get a single restaurant by ID.
-     *
-     * Returns null and does not expose errors if the ID is invalid.
      *
      * @param int $id
      *
@@ -34,9 +57,32 @@ class CustomerController
             return null;
         }
 
-        $restaurant = new Restaurant($GLOBALS["conn"]);
+        $r = getRestaurantById($id);
 
-        return $restaurant->getRestaurantById($id);
+        if (!$r) {
+            return null;
+        }
+
+        $menus = getMenuItemsByRestaurant($r['restaurant_id']);
+        $formattedMenus = [];
+
+        foreach ($menus as $m) {
+            $formattedMenus[] = [
+                'id' => (int)$m['food_id'],
+                'name' => $m['name'],
+                'image' => '../../assets/images/food' . ((int)$m['food_id'] % 14 + 1) . '.jpg',
+                'description' => $m['description'],
+                'price' => (float)$m['price']
+            ];
+        }
+
+        return [
+            'id' => (int)$r['restaurant_id'],
+            'name' => $r['name'],
+            'image' => '../../assets/images/restaurant' . (((int)$r['restaurant_id'] - 1) % 5 + 1) . '.jpg',
+            'area' => $r['area_name'] ?? 'Unknown Area',
+            'menu' => $formattedMenus
+        ];
     }
 }
 
