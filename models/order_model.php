@@ -277,6 +277,20 @@ class Order
      *
      * @return array|null
      */
+    public function getLatestOrderForCustomer($userId)
+    {
+        $sql = "SELECT * FROM `Order` WHERE Customer_ID = ? ORDER BY Order_ID DESC LIMIT 1";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bind_param("i", $userId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        if ($row = $result->fetch_assoc()) {
+            return $row;
+        }
+        return false;
+    }
+
     public function getOrderById($orderId, $userId)
     {
         $orderId = (int)$orderId;

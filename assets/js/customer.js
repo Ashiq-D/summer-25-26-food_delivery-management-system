@@ -1041,24 +1041,20 @@ function showTracking() {
 
     closeCart();
 
-    if (!currentOrder || !currentOrder.id) {
+    let databaseOrderId = 0;
 
-        window.scrollTo({ top: 0, behavior: "smooth" });
+    if (currentOrder && currentOrder.id) {
 
-        return;
+        /* Extract numeric order ID from "CR12345" */
+        databaseOrderId = parseInt(
+            String(currentOrder.id).replace("CR", "")
+        );
 
     }
 
-    /* Extract numeric order ID from "CR12345" */
-    const databaseOrderId = parseInt(
-        String(currentOrder.id).replace("CR", "")
-    );
+    if (isNaN(databaseOrderId) || databaseOrderId < 0) {
 
-    if (isNaN(databaseOrderId) || databaseOrderId <= 0) {
-
-        window.scrollTo({ top: 0, behavior: "smooth" });
-
-        return;
+        databaseOrderId = 0;
 
     }
 
@@ -1076,6 +1072,7 @@ function showTracking() {
         const order = data.order;
 
         /* Update local state from database */
+        currentOrder.id            = "CR" + order.Order_ID;
         currentOrder.status        = order.Order_Status;
         currentOrder.paymentMethod = order.Payment_Method;
         currentOrder.paymentStatus = order.Payment_Status;

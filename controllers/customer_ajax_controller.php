@@ -239,14 +239,15 @@ function handleTrackOrder($conn) {
         exit;
     }
 
+    $customerId = (int)$_SESSION["customer_id"];
     $orderId = (int)($_GET["orderId"] ?? 0);
-    if ($orderId <= 0) {
-        echo json_encode(["success" => false, "message" => "Invalid order ID."]);
-        exit;
-    }
-
     $orderModel = new Order($conn);
-    $orderData = $orderModel->getOrderById($orderId, (int)$_SESSION["customer_id"]);
+
+    if ($orderId <= 0) {
+        $orderData = $orderModel->getLatestOrderForCustomer($customerId);
+    } else {
+        $orderData = $orderModel->getOrderById($orderId, $customerId);
+    }
 
     if ($orderData) {
         echo json_encode([
